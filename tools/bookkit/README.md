@@ -7,7 +7,7 @@
 
 ```bash
 # 1. 准备：把 OCR 出来的 Markdown 放到任意位置
-# 2. 写规格：复制一份 specs/毒教育.yml 改章节结构、噪声行、错字表
+# 2. 写规格：复制一份 specs/01_毒教育.yml 改章节结构、噪声行、错字表
 # 3. 跑
 python3 bookkit.py specs/新书.yml --src /path/to/新书.md --out /path/to/输出目录
 ```
