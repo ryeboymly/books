@@ -17,7 +17,7 @@ html{background:var(--paper)}
 body{
   margin:0; background:var(--paper); color:var(--ink);
   font-family:"BookSerif","Noto Serif CJK SC","Source Han Serif SC","Songti SC",serif;
-  font-size:clamp(16px,1.02vw + 11px,19px);
+  font-size:clamp(16px,1.02vw + 11px,20px);
   line-height:1.95;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
@@ -26,6 +26,8 @@ body{
 }
 
 .wrap{max-width:var(--measure); margin:0 auto; padding:0 1.6em}
+.side{display:block}
+.main{display:block}
 
 /* 封面：竖排书名 */
 .cover{
@@ -109,6 +111,26 @@ li{text-indent:0; margin:.35em 0 .35em 1.6em; line-height:1.85}
   h1.chapter .ctitle{font-size:1.34em}
   h2{margin-top:2em}
 }
+
+/* 桌面宽屏：目录常驻左侧，正文居中成版心 */
+@media (min-width:1180px){
+  .wrap{
+    max-width:none; display:grid;
+    grid-template-columns:17em minmax(0,37em);
+    gap:3.4em; justify-content:center; align-items:start;
+    padding:0 3em;
+  }
+  .side{position:sticky; top:2.6em; align-self:start; margin:0; padding:0 0 0 .4em; font-size:.8em; max-height:calc(100vh - 5em); overflow:auto; scrollbar-width:none}
+  .side::-webkit-scrollbar{display:none}
+  .side .toc-title{font-size:1em; margin:0 0 1.4em; letter-spacing:.3em}
+  .side .toc-list>li.lvl1{margin-bottom:.1em}
+  .side .lvl1>a{padding:.35em 0}
+  .side .lvl2{margin:.16em 0}
+  .side .sub{margin:.35em 0 .9em .9em}
+  .main{min-width:0}
+  section.level1 + section.level1{margin-top:6em}
+}
+
 @media print{
   .cover,.toc{page-break-after:always}
   section.level1{page-break-before:always}
@@ -121,6 +143,7 @@ li{text-indent:0; margin:.35em 0 .35em 1.6em; line-height:1.85}
 <div class="cv-main"><h1>毒教育</h1></div>
 </div><div class="cover-foot">布老师</div></header>
 <div class="wrap">
+<aside class="side">
 <nav class="toc" id="toc"><h2 class="toc-title">目录</h2><ol class="toc-list">
 <li class="lvl1"><a href="#None"><span class="tt">出版说明</span></a>
 </li>
@@ -180,6 +203,8 @@ li{text-indent:0; margin:.35em 0 .35em 1.6em; line-height:1.85}
 </ol>
 </li>
 </ol></nav>
+</aside>
+<main class="main">
 <section id="出版说明" class="level1">
 <h1 class="chapter"><span class="ctitle">出版说明</span></h1>
 <blockquote>
@@ -685,5 +710,6 @@ easy 模式，他的人生是 hard
 </section>
 </section>
 
+</main>
 </div>
 </body></html>
