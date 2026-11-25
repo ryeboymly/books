@@ -8,6 +8,8 @@
 </style>
 </head>
 <body>
+<button class="toc-toggle" id="tocBtn" aria-label="打开目录">目录</button>
+<div class="nav-backdrop" id="navBg"></div>
 <header class="cover"><div class="cover-inner">
 <div class="cv-side"><span class="sub">{{SUBTITLE}}</span></div>
 <div class="cv-main"><h1>{{TITLE}}</h1></div>
@@ -20,4 +22,15 @@
 {{BODY}}
 </main>
 </div>
+<script>
+(function(){
+  var b=document.getElementById("tocBtn"), g=document.getElementById("navBg");
+  if(!b) return;
+  function close(){document.body.classList.remove("nav-open")}
+  b.addEventListener("click",function(e){e.stopPropagation();document.body.classList.toggle("nav-open")});
+  g.addEventListener("click",close);
+  document.querySelector(".main").addEventListener("click",close);
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")close()});
+})();
+</script>
 </body></html>

@@ -20,6 +20,8 @@ body{
 }
 
 .wrap{max-width:var(--measure); margin:0 auto; padding:0 1.6em}
+.toc-toggle{display:none}
+.nav-backdrop{display:none}
 .side{display:block}
 .main{display:block}
 
@@ -111,12 +113,28 @@ li{text-indent:0; margin:.35em 0 .35em 1.6em; line-height:1.85}
 /* 桌面宽屏：目录常驻左侧，正文居中成版心 */
 @media (min-width:1180px){
   .wrap{
-    max-width:none; display:grid;
-    grid-template-columns:17em minmax(0,37em);
-    gap:3.4em; justify-content:center; align-items:start;
-    padding:0 3em;
+    max-width:none; display:block; padding:0 3em;
   }
-  .side{position:sticky; top:2.6em; align-self:start; margin:0; padding:0 0 0 .4em; font-size:.8em; max-height:calc(100vh - 5em); overflow:auto; scrollbar-width:none}
+  .main{max-width:37em; margin:0 auto}
+  .toc-toggle{
+    display:block; position:fixed; top:1.5em; right:1.6em; z-index:12;
+    padding:.62em .9em; border:1px solid #d9d3c6; background:rgba(255,255,255,.94);
+    color:#6d6457; font-family:"BookSans",sans-serif; font-size:11px; letter-spacing:.28em;
+    cursor:pointer; border-radius:2px;
+  }
+  .toc-toggle:hover{color:#2b2b2b; border-color:#b9b2a2}
+  body.nav-open .toc-toggle{right:calc(17em + 1.6em)}
+  .nav-backdrop{display:block; position:fixed; inset:0; background:rgba(0,0,0,.10); opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:10}
+  body.nav-open .nav-backdrop{opacity:1; pointer-events:auto}
+  .side{
+    position:fixed; top:0; left:0; bottom:0; width:17em; z-index:11;
+    margin:0; padding:3.4em 1.5em 2em; background:#fff; border-right:1px solid #eee8dc;
+    box-shadow:0 0 48px rgba(0,0,0,.07);
+    transform:translateX(-102%); transition:transform .25s ease;
+    font-size:.8em; overflow:auto; scrollbar-width:none;
+    max-height:none; align-self:auto;
+  }
+  body.nav-open .side{transform:none}
   .side::-webkit-scrollbar{display:none}
   .side .toc-title{font-size:1em; margin:0 0 1.4em; letter-spacing:.3em}
   .side .toc-list>li.lvl1{margin-bottom:.1em}
@@ -128,6 +146,7 @@ li{text-indent:0; margin:.35em 0 .35em 1.6em; line-height:1.85}
 }
 
 @media print{
+  .toc-toggle,.nav-backdrop{display:none!important}
   .cover,.toc{page-break-after:always}
   section.level1{page-break-before:always}
 }
