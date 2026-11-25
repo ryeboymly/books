@@ -144,51 +144,27 @@ curl -s -X POST \
 
 ## 四、Python 上传脚本
 
-完整脚本见同目录下 `khm_upload.py`，支持单文件和批量上传。
-
-### 凭证文件（存放在私有仓 mly）
-
-凭证文件路径: `mly/ops(环境运维)/khm-credentials.toml`
-
-```toml
-[khm]
-cookie = "ETEAMSID=...; langType=zh_CN; uaa_session_id=...; graph.jd.com=..."
-space_code = "P_8853"
-dir_id = 1043232
-project_id = 1
-base_url = "https://khm.catl.com"
-```
-
-> 注意: cookie 是敏感信息，只存放在私有仓 mly 中，不进公开仓。
+完整脚本见同目录下 `khm_upload.py`，cookie 和空间配置直接写在脚本顶部。
 
 ### 使用方法
 
 ```bash
-# 设置凭证路径
-export KHM_CREDS=/path/to/mly/ops(环境运维)/khm-credentials.toml
-
 # 上传单个文件
 python khm_upload.py /path/to/file.md
 
 # 批量上传目录
 python khm_upload.py /path/to/directory/
-
-# 上传到部门空间
-python khm_upload.py /path/to/file.md --dept
 ```
 
-### 脚本特性
+### Cookie 过期更新
 
-- 自动从 toml 凭证文件读取 cookie 和空间信息
-- Cookie 过期时自动识别并提示重新获取
-- 批量上传时显示进度和统计
-- 支持私人空间和部门空间切换
+打开 `khm_upload.py`，替换顶部 `COOKIE` 变量的值即可。
 
 ---
 
 ## 五、注意事项
 
-1. **Cookie 有效期**：Session cookie 有时效，长时间不用需要重新获取
+1. **Cookie 有效期**：Session cookie 有时效，过期后重新从浏览器获取
 2. **支持的文件格式**：pdf, xls, xlsx, csv, xlsm, doc, docx, ppt, pptx, md, txt, vsdx, vsd, png, jpg, jpeg
 3. **projectId**：URL 中的 `/1` 是 projectId，生产环境固定为 1
 4. **空间选择**：私人空间（dirType=2）只有自己能看到；部门空间其他人可见

@@ -4,67 +4,43 @@ KHM 知识中心文件上传工具
 用法:
   python khm_upload.py <文件路径>          # 上传单个文件
   python khm_upload.py <目录路径>          # 批量上传目录下所有文件
-  python khm_upload.py <文件路径> --dept   # 上传到部门空间(默认私人空间)
 
-凭证存放在私有仓 mly 的 ops(环境运维)/khm-credentials.toml 中。
-首次使用前: export KHM_CREDS=/path/to/khm-credentials.toml
+Cookie 过期后需重新从浏览器获取，替换下面的 COOKIE 值。
 """
 
 import requests
 import json
 import sys
-import os
 from pathlib import Path
 
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
+# ========== 凭证配置（直接写死，过期了来这里换） ==========
+COOKIE = "ETEAMSID=INTUNIFYAUTHUNIFIEDAUTH_cd17bce249179077cc0544be11a8096d-9JHMO4JM4FB4N; langType=zh_CN; uaa_session_id=r8bh8fxonlfcibtxj3as7udyikvib0pz; graph.jd.com=cXsDbIIPtJnihIObPJeITXCfzMJJbpFX"
+SPACE_CODE = "P_8853"
+DIR_ID = 1043232
+PROJECT_ID = 1
+BASE_URL = "https://khm.catl.com"
+# =========================================================
 
-def load_config():
-    """从 toml 凭证文件加载配置"""
-    creds_path = os.environ.get("KHM_CREDS")
-    if not creds_path:
-        # 尝试默认路径
-        creds_path = os.path.expanduser("~/mly/ops(环境运维)/khm-credentials.toml")
-    if not os.path.exists(creds_path):
-        print(f"[ERROR] 凭证文件不存在: {creds_path}")
-        print("请设置环境变量 KHM_CREDS 指向 khm-credentials.toml")
-        sys.exit(1)
-    with open(creds_path, "rb") as f:
-        return tomllib.load(f)["khm"]
+HEADERS = {
+    "Cookie": COOKIE,
+    "Origin": BASE_URL,
+    "Referer": f"{BASE_URL}/knowledge-center",
+}
 
-def upload_file(filepath, config, use_dept=False):
-    """上传单个文件到 KHM"""
+def upload_file(filepath):
+    """上传单个文件到 KHM 私人空间"""
     p = Path(filepath)
     if not p.is_file():
         print(f"[SKIP] {filepath} 不是文件")
         return None
 
-    base_url = config["base_url"]
-    cookie = config["cookie"]
-    project_id = config["project_id"]
-
-    if use_dept:
-        space_code = config.get("dept_space_code", "")
-        dir_id = config.get("dept_dir_id", 0)
-    else:
-        space_code = config["space_code"]
-        dir_id = config["dir_id"]
-
-    headers = {
-        "Cookie": cookie,
-        "Origin": base_url,
-        "Referer": f"{base_url}/knowledge-center",
-    }
-
     with open(p, "rb") as f:
         files = {"file": (p.name, f)}
-        data = {"spaceInfo": json.dumps({"spaceCode": space_code, "dirId": dir_id})}
+        data = {"spaceInfo": json.dumps({"spaceCode": SPACE_CODE, "dirId": DIR_ID})}
         try:
             resp = requests.post(
-                f"{base_url}/api-poc/cpd/file/add/{project_id}",
-                headers=headers,
+                f"{BASE_URL}/api-poc/cpd/file/add/{PROJECT_ID}",
+                headers=HEADERS,
                 files=files,
                 data=data,
                 timeout=30,
@@ -76,19 +52,19 @@ def upload_file(filepath, config, use_dept=False):
 
     if result.get("code") == 0:
         content = result.get("content", {})
-        print(f"[OK]   {p.name} -> id={content.get('id')} url={base_url}/api-poc/cpd/file/is/{project_id}/{content.get('id')}")
+        print(f"[OK]   {p.name} -> id={content.get('id')} preview={BASE_URL}/api-poc/cpd/file/is/{PROJECT_ID}/{content.get('id')}")
         return result
     else:
         msg = result.get("message", "未知错误")
         if "登录失效" in msg:
-            print(f"[FAIL] {p.name} -> Cookie 过期，请重新获取")
+            print(f"[FAIL] {p.name} -> Cookie 过期，请更新脚本中的 COOKIE")
         elif "没有权限" in msg:
             print(f"[FAIL] {p.name} -> 无权限，检查空间配置")
         else:
             print(f"[FAIL] {p.name} -> {msg}")
         return None
 
-def batch_upload(directory, config, use_dept=False):
+def batch_upload(directory):
     """批量上传目录下所有文件"""
     d = Path(directory)
     if not d.is_dir():
@@ -101,7 +77,7 @@ def batch_upload(directory, config, use_dept=False):
     success = 0
     fail = 0
     for f in files:
-        result = upload_file(str(f), config, use_dept)
+        result = upload_file(str(f))
         if result:
             success += 1
         else:
@@ -111,18 +87,15 @@ def batch_upload(directory, config, use_dept=False):
 
 def main():
     if len(sys.argv) < 2:
-        print("用法: python khm_upload.py <文件或目录路径> [--dept]")
+        print("用法: python khm_upload.py <文件或目录路径>")
         sys.exit(1)
 
     path = sys.argv[1]
-    use_dept = "--dept" in sys.argv
-
-    config = load_config()
 
     if Path(path).is_dir():
-        batch_upload(path, config, use_dept)
+        batch_upload(path)
     elif Path(path).is_file():
-        upload_file(path, config, use_dept)
+        upload_file(path)
     else:
         print(f"[ERROR] 路径不存在: {path}")
         sys.exit(1)
