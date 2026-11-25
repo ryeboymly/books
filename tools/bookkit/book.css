@@ -31,6 +31,8 @@ body{
 }
 .cover-inner{display:flex; align-items:flex-start; justify-content:center; gap:1.8em}
 .cv-side{writing-mode:vertical-rl; text-orientation:upright; margin-top:5.2em}
+.cv-side.sub-long-wrap{writing-mode:horizontal-tb; margin-top:11em; width:9em; text-align:right; padding-right:1em}
+.sub-long{display:block; font-family:"BookSans",sans-serif; font-size:.78em; line-height:1.9; letter-spacing:.12em; color:#8a8a8a}
 .cover .sub{
   font-family:"BookSans","Noto Sans CJK SC","PingFang SC",sans-serif;
   font-size:.8em; letter-spacing:.55em; color:#8a8a8a;

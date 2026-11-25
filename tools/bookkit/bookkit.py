@@ -232,6 +232,7 @@ def build():
                 name, lead = sec_map[line_no]
                 blocks.append(("h3", name))
                 if lead:
+                    lead = clean_line(lead)
                     for para in pack(split_sentences(lead)):
                         blocks.append(("para", para))
                 elif text.startswith(name):
@@ -494,6 +495,10 @@ def build_html(body_html: str, toc_html: str, spec: dict, fonts: dict) -> str:
         css = re.sub(r"@font-face\{[^}]*\}\n?", "", css)
 
     tpl = (HERE / "book.html").read_text(encoding="utf-8")
+    sub = spec.get("book", {}).get("subtitle", "")
+    if len(sub) > 8:
+        tpl = tpl.replace('<div class="cv-side"><span class="sub">{{SUBTITLE}}</span></div>',
+                          '<div class="cv-side sub-long-wrap"><span class="sub-long">{{SUBTITLE}}</span></div>')
     return (tpl.replace("{{CSS}}", css)
                 .replace("{{TOC}}", toc_html)
                 .replace("{{BODY}}", body_html)
