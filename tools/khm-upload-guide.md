@@ -142,58 +142,47 @@ curl -s -X POST \
 
 ---
 
-## 四、Python 批量上传脚本
+## 四、Python 上传脚本
 
-```python
-import requests
-import json
-from pathlib import Path
+完整脚本见同目录下 `khm_upload.py`，支持单文件和批量上传。
 
-KHM_BASE = "https://khm.catl.com"
-COOKIE = "ETEAMSID=...; langType=zh_CN; uaa_session_id=...; graph.jd.com=..."
-SPACE_CODE = "P_8853"
-DIR_ID = 1043232
+### 凭证文件（存放在私有仓 mly）
 
-HEADERS = {
-    "Cookie": COOKIE,
-    "Origin": KHM_BASE,
-    "Referer": f"{KHM_BASE}/knowledge-center",
-}
+凭证文件路径: `mly/ops(环境运维)/khm-credentials.toml`
 
-def upload_file(filepath: str) -> dict:
-    """上传单个文件到 KHM 私人空间"""
-    p = Path(filepath)
-    with open(p, "rb") as f:
-        files = {"file": (p.name, f)}
-        data = {"spaceInfo": json.dumps({"spaceCode": SPACE_CODE, "dirId": DIR_ID})}
-        resp = requests.post(
-            f"{KHM_BASE}/api-poc/cpd/file/add/1",
-            headers=HEADERS,
-            files=files,
-            data=data,
-            timeout=30,
-        )
-    result = resp.json()
-    if result.get("code") == 0:
-        print(f"[OK] {p.name} -> id={result['content']['id']}")
-    else:
-        print(f"[FAIL] {p.name} -> {result.get('message')}")
-    return result
-
-def batch_upload(directory: str):
-    """批量上传目录下所有文件"""
-    for p in sorted(Path(directory).iterdir()):
-        if p.is_file():
-            upload_file(str(p))
-
-if __name__ == "__main__":
-    # 单个文件
-    # upload_file("/path/to/file.md")
-    
-    # 批量上传
-    # batch_upload("/path/to/directory")
-    pass
+```toml
+[khm]
+cookie = "ETEAMSID=...; langType=zh_CN; uaa_session_id=...; graph.jd.com=..."
+space_code = "P_8853"
+dir_id = 1043232
+project_id = 1
+base_url = "https://khm.catl.com"
 ```
+
+> 注意: cookie 是敏感信息，只存放在私有仓 mly 中，不进公开仓。
+
+### 使用方法
+
+```bash
+# 设置凭证路径
+export KHM_CREDS=/path/to/mly/ops(环境运维)/khm-credentials.toml
+
+# 上传单个文件
+python khm_upload.py /path/to/file.md
+
+# 批量上传目录
+python khm_upload.py /path/to/directory/
+
+# 上传到部门空间
+python khm_upload.py /path/to/file.md --dept
+```
+
+### 脚本特性
+
+- 自动从 toml 凭证文件读取 cookie 和空间信息
+- Cookie 过期时自动识别并提示重新获取
+- 批量上传时显示进度和统计
+- 支持私人空间和部门空间切换
 
 ---
 
