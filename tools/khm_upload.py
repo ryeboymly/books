@@ -18,6 +18,9 @@ import sys
 from pathlib import Path
 
 # ========== 凭证配置（直接写死，过期了来这里换） ==========
+# 密级说明：1=公开（私人空间中自动显示为"个人"），2=内部，3=秘密，4=机密，5=绝密
+# 私人空间上传时 securityLevel=1 即为"个人"级别，无需额外设置
+SECURITY_LEVEL = 1  # 私人空间中 1 = 个人
 COOKIE = "ETEAMSID=INTUNIFYAUTHUNIFIEDAUTH_cd17bce249179077cc0544be11a8096d-9JHMO4JM4FB4N; langType=zh_CN; uaa_session_id=r8bh8fxonlfcibtxj3as7udyikvib0pz; graph.jd.com=cXsDbIIPtJnihIObPJeITXCfzMJJbpFX"
 SPACE_CODE = "P_8853"
 DIR_ID = 1043232
@@ -58,7 +61,7 @@ def upload_file(filepath):
     doc_info = {
         "docRealName": p.name,
         "docFormat": doc_format,
-        "securityLevel": 1,
+        "securityLevel": SECURITY_LEVEL,
         "spaceCode": SPACE_CODE,
         "dirId": DIR_ID,
         "authorInfoList": [{"author": AUTHOR_NAME, "authorType": "1"}],
