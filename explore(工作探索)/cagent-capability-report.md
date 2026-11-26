@@ -1,9 +1,9 @@
 # 大头虾 (C-Agent) 能力边界探测报告
 
-> 探测时间: 2026-11-26 (初版) / 2026-11-26 (更新1: 网络深挖+幻觉验证) / 2026-11-26 (更新2: cap-webfetch外网突破)
+> 探测时间: 2026-11-26 (初版) / 2026-11-26 (更新1: 网络深挖+幻觉验证) / 2026-11-26 (更新2: cap-webfetch外网突破) / 2026-11-26 (更新3: dws/COME3.0能力发现)
 > 探测方式: 通过 cagentapi.catl.com API 发送测试指令
 > Agent: agent-1794400677722-fe418fb5 (agentId=14008331)
-> 探测轮次: 8轮, 覆盖工具/网络/安全/子agent/文件系统/技能/外网突破
+> 探测轮次: 9轮, 覆盖工具/网络/安全/子agent/文件系统/技能/外网突破/COME3.0
 
 ## 一、运行环境
 
@@ -54,6 +54,24 @@
 - pdf - 分析 PDF
 - execute_office_js - 在 Office(WORD/Excel/PPT) 执行 JavaScript
 
+### COME3.0 集成 (dws 技能)
+- dws (DingTalk Work System CLI) - 二进制命令行工具, 操作 COME3.0 全产品线
+  - todo - 创建待办/指派/查询/标记完成/子待办/评论/附件
+  - chat - 群聊管理/发消息(文本/Markdown/图片/文件)/搜索群/拉群/机器人
+  - contact - 通讯录查询(用户/部门/角色)/花名册/找人
+  - calendar - 日程管理/会议室/闲忙查询/时间建议
+  - doc - COME 文档读写
+  - drive - 云盘文件上传/下载
+  - minutes - AI 听记纪要查询
+  - report - 日志/日报/周报模板提交
+  - sheet - 在线电子表格读写
+  - aitable - AI 表格操作
+  - ding - DING 消息发送
+  - wiki - 知识库管理
+  - devdoc - 开放平台文档搜索
+  - ⚠️ 不支持: OA审批/BPM审批(走 bpm 技能), 邮件(dws mail 禁用)
+  - ⚠️ 需先执行 `dws auth login` 完成设备授权登录
+
 ### 其他
 - skill_workshop - 创建/更新/审查/应用技能
 - dingtalk_ask_user_question - 钉钉互动卡片 (仅钉钉通道)
@@ -74,7 +92,7 @@
 | JFrog PyPI | jfrog.catlbattery.com | 可达 (需认证) | pip 镜像源, 仅供包安装 |
 | KHM 知识中心 | khm.catl.com | 不可达 (超时) | TCP 不通 |
 | V盘 2.0 | vdrive.catl.com | 不可达 (超时) | TCP 不通 |
-| COME | come.catl.com | 不可达 (超时) | TCP 不通 |
+| COME | come.catl.com | TCP 不通, **但可通过 dws 技能操作** | dws CLI 走平台内部通道, 非直连 TCP |
 
 ### 3.2 外网访问 (深挖结论)
 
@@ -167,11 +185,14 @@
 6. pip 包安装 - 通过 JFrog 内网镜像
 7. **外网访问 (cap-webfetch)** - Chrome CDP 引擎可抓取外网网页, 包括 GitHub/Bing 等
 8. Bing 搜索 - 通过 cap-webfetch 执行搜索引擎查询
+9. **COME3.0 操作 (dws 技能)** - 待办/消息/群聊/通讯录/日历/文档/云盘/表格/知识库/DING消息
+10. COME3.0 文档读写 - 通过 dws doc 操作 COME 文档
+11. COME3.0 云盘 - 通过 dws drive 上传/下载文件
 
 ### 不可用
 1. 基础外网通道 (curl/socket/web_fetch) - K8s NetworkPolicy 全封
 2. ctokenai 深度研究 - 服务可达但 API 端点不公开
-3. KHM/V盘/COME 等内网服务 - TCP 不通
+3. KHM/V盘 - TCP 不通 (COME 已通过 dws 技能解决)
 4. 子 agent 创建 - webchat 通道限制 (钉钉通道可能支持)
 5. 钉钉消息 - webchat 通道限制 (钉钉通道可能支持)
 6. 系统级操作 - ClawAegis 安全策略拦截
@@ -189,6 +210,7 @@
                  ├─ memory_store/recall (记忆)
                  ├─ web_fetch (基础HTTP, 外网不通)
                  ├─ cap-webfetch (Chrome CDP, **外网可达**)
+                 ├─ dws CLI (COME3.0 全产品线, 需 auth login)
                  └─ ctokenai.catl.com (深度研究, API不公开)
 ```
 
@@ -199,7 +221,9 @@
 - **可通过 cap-webfetch 技能访问外网** (Chrome CDP 引擎, 抓取网页/搜索)
 - 基础网络通道 (curl/socket/web_fetch) 全封, 外网只能走 cap-webfetch
 - ctokenai 服务可达但 API 不公开, 深度研究能力暂不可用
-- 不能直接访问 KHM/V盘/COME (需要 3122 做中间人)
+- **可通过 dws 技能操作 COME3.0** (待办/消息/群聊/通讯录/日历/文档/云盘/表格/知识库等)
+- 不能直接访问 KHM/V盘 (需要 3122 做中间人)
+- dws 需要先完成 `dws auth login` 设备授权登录 (15分钟有效期)
 - webchat 通道能力受限, 钉钉通道功能更全
 - **有幻觉风险, 关键操作必须用 exec 跑实际命令验证, 不能信文字总结**
 
@@ -209,6 +233,13 @@
 - 指令示例: "用 cap-webfetch 技能抓取 https://github.com/xxx"
 - 大头虾会自动调用 `/home/node/.openclaw/skills/cap-webfetch/scripts/webfetch.py`
 - 支持网页抓取和搜索引擎查询 (Bing)
+
+### COME3.0 操作的正确姿势
+- 使用 `dws` 命令行工具操作 COME3.0, 覆盖待办/消息/群聊/通讯录/日历/文档/云盘等
+- 首次使用需执行 `dws auth login`, 生成设备授权码, 在浏览器中完成钉钉授权
+- 授权码有效期 15 分钟, 登录后 token 持久化在 `~/.local/share/dws-cli/`
+- 指令示例: `dws todo +get-my-tasks` 查询待办, `dws chat +send` 发消息
+- 不支持 OA/BPM 审批 (走 bpm 技能), 不支持邮件 (dws mail 禁用)
 
 ### 幻觉案例记录
 1. git clone GitHub 报告 EXIT:0, 实际超时 (exit 124)
