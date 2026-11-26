@@ -1,9 +1,9 @@
 # 大头虾 (C-Agent) 能力边界探测报告
 
-> 探测时间: 2026-11-26 (初版) / 2026-11-26 (更新: 网络深挖+幻觉验证)
+> 探测时间: 2026-11-26 (初版) / 2026-11-26 (更新1: 网络深挖+幻觉验证) / 2026-11-26 (更新2: cap-webfetch外网突破)
 > 探测方式: 通过 cagentapi.catl.com API 发送测试指令
 > Agent: agent-1794400677722-fe418fb5 (agentId=14008331)
-> 探测轮次: 5轮, 覆盖工具/网络/安全/子agent/文件系统
+> 探测轮次: 8轮, 覆盖工具/网络/安全/子agent/文件系统/技能/外网突破
 
 ## 一、运行环境
 
@@ -29,7 +29,8 @@
 - process - 管理后台进程 (list/poll/log/kill)
 
 ### 网络
-- web_fetch - 抓取 URL (仅内网可达域名)
+- web_fetch - 抓取 URL (基础HTTP, 外网超时, 内网被SSRF拦截)
+- cap-webfetch (技能) - Chrome CDP 引擎抓取网页 (**可访问外网**, 走独立网络通道)
 
 ### 会话与通信
 - sessions_list - 列出会话
@@ -77,6 +78,8 @@
 
 ### 3.2 外网访问 (深挖结论)
 
+#### 3.2.1 基础网络层 (curl/socket/web_fetch) - 全部不通
+
 | 测试项 | 结果 | 说明 |
 |--------|------|------|
 | DNS 解析 | 通 | github.com/baidu.com/pypi.org 均解析到真实 IP |
@@ -87,9 +90,25 @@
 | git clone GitHub | 超时 (exit 124) | 之前报告的 EXIT:0 是幻觉 |
 | curl 直连外网 IP | 超时 | 20.6.7.17:80, 124.237.177.164:80 |
 | HTTP 代理 | 无 | env 中无 HTTP_PROXY/HTTPS_PROXY |
+| JFrog 代理 GitHub | 拒绝隧道 | Tunnel connection failed: 400 Bad Request |
+| 内网 git 镜像 | 无 | github.catl.com/git.catl.com/gitlab.catl.com 全超时 |
 | pip install | 可用 | 通过 JFrog 内网镜像代理 PyPI |
 
-**结论: 大头虾完全不能访问外网。** DNS 可解析但 TCP 出网被 K8s NetworkPolicy 全封。唯一外网通道是 JFrog Artifactory 镜像 (仅限 pip 包安装)。
+#### 3.2.2 cap-webfetch 技能 (Chrome CDP) - **可访问外网**
+
+| 测试项 | 结果 | 说明 |
+|--------|------|------|
+| cap-webfetch 抓取 GitHub | **成功** | 通过 Chrome CDP 引擎抓取 github.com/ryeboymly 页面 |
+| Bing 搜索 | **成功** | 可执行搜索但精确匹配效果一般 |
+| web_fetch (基础工具) | 超时 | 与 cap-webfetch 走不同网络通道 |
+
+**关键发现:** 大头虾有两条网络通道:
+1. **基础通道** (curl/socket/web_fetch) - K8s NetworkPolicy 全封, 不可用
+2. **cap-webfetch 通道** (Chrome CDP 引擎) - 走独立网络出口, **可访问外网**
+
+> cap-webfetch 是一个技能 (skill), 脚本位于 `/home/node/.openclaw/skills/cap-webfetch/scripts/webfetch.py`, 使用 Chrome DevTools Protocol 渲染网页并提取内容。它不走容器的 TCP 出网, 而是通过平台后端代理访问外网。
+
+**实测验证:** 推送新文件到 GitHub 后让大头虾读取, 基础通道全部超时, 但 cap-webfetch 成功抓取到 GitHub 页面并返回正确的公开仓库列表 (books + bookkit-lite)。
 
 ### 3.3 ctokenai 深度研究服务
 
@@ -146,9 +165,11 @@
 4. 会话管理 - 多会话并行, 可创建/删除/发消息
 5. 完整 API 调用链 - 创建会话/发消息(SSE)/读历史/删会话
 6. pip 包安装 - 通过 JFrog 内网镜像
+7. **外网访问 (cap-webfetch)** - Chrome CDP 引擎可抓取外网网页, 包括 GitHub/Bing 等
+8. Bing 搜索 - 通过 cap-webfetch 执行搜索引擎查询
 
 ### 不可用
-1. 外网访问 - DNS 通但 TCP 全封, 无任何外网出口
+1. 基础外网通道 (curl/socket/web_fetch) - K8s NetworkPolicy 全封
 2. ctokenai 深度研究 - 服务可达但 API 端点不公开
 3. KHM/V盘/COME 等内网服务 - TCP 不通
 4. 子 agent 创建 - webchat 通道限制 (钉钉通道可能支持)
@@ -166,19 +187,28 @@
                  ├─ exec (shell/python)
                  ├─ read/write (文件)
                  ├─ memory_store/recall (记忆)
-                 ├─ web_fetch (内网)
-                 └─ ctokenai.catl.com (深度研究)
+                 ├─ web_fetch (基础HTTP, 外网不通)
+                 ├─ cap-webfetch (Chrome CDP, **外网可达**)
+                 └─ ctokenai.catl.com (深度研究, API不公开)
 ```
 
 ## 九、关键结论
 
-大头虾是一个**沙箱化的代码执行+记忆持久化引擎**, 适合作为 3122 的后端计算节点:
+大头虾是一个**沙箱化的代码执行+记忆持久化+外网抓取引擎**, 适合作为 3122 的后端计算节点:
 - 能跑 Python 处理数据, 结果存工作空间或记忆系统
-- 完全不能访问外网 (DNS 通但 TCP 全封)
+- **可通过 cap-webfetch 技能访问外网** (Chrome CDP 引擎, 抓取网页/搜索)
+- 基础网络通道 (curl/socket/web_fetch) 全封, 外网只能走 cap-webfetch
 - ctokenai 服务可达但 API 不公开, 深度研究能力暂不可用
 - 不能直接访问 KHM/V盘/COME (需要 3122 做中间人)
 - webchat 通道能力受限, 钉钉通道功能更全
 - **有幻觉风险, 关键操作必须用 exec 跑实际命令验证, 不能信文字总结**
+
+### 外网访问的正确姿势
+- 不要用 `web_fetch` 工具或 `curl` 访问外网 (会超时)
+- 让大头虾使用 `cap-webfetch` 技能 (Chrome CDP 引擎) 抓取外网网页
+- 指令示例: "用 cap-webfetch 技能抓取 https://github.com/xxx"
+- 大头虾会自动调用 `/home/node/.openclaw/skills/cap-webfetch/scripts/webfetch.py`
+- 支持网页抓取和搜索引擎查询 (Bing)
 
 ### 幻觉案例记录
 1. git clone GitHub 报告 EXIT:0, 实际超时 (exit 124)
