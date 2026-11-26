@@ -17,3 +17,6 @@
 
 ## tools/bookkit/
 规格驱动的排版流水线，用法见 `tools/bookkit/README.md`。
+
+## explore(工作探索)/
+工作场景的接口探测与逆向脚本（KHM、C-Agent、V盘 2.0），与藏书主线无关，单独分区存放。清单见 `explore(工作探索)/README.md`。
