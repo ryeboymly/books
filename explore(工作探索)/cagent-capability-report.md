@@ -1,10 +1,10 @@
 # 大头虾 (C-Agent) 能力边界探测报告
 
-> 探测时间: 2026-11-26 (初版) / 2026-11-26 (更新1: 网络深挖+幻觉验证) / 2026-11-26 (更新2: cap-webfetch外网突破) / 2026-11-26 (更新3: dws/COME3.0能力发现) / 2026-11-26 (更新4: 文件传输+workspace规范) / 2026-11-26 (更新5: skill体系全量探测)
+> 探测时间: 2026-11-26 (初版) / 2026-11-26 (更新1: 网络深挖+幻觉验证) / 2026-11-26 (更新2: cap-webfetch外网突破) / 2026-11-26 (更新3: dws/COME3.0能力发现) / 2026-11-26 (更新4: 文件传输+workspace规范) / 2026-11-26 (更新5: skill体系全量探测) / 2026-11-26 (更新6: 新skill安装+intranet-fetch测试)
 > 探测方式: 通过 cagentapi.catl.com API 发送测试指令
 > Agent: agent-1794400677722-fe418fb5 (agentId=14008331)
-> 探测轮次: 12轮, 覆盖工具/网络/安全/子agent/文件系统/技能/外网突破/COME3.0/文件传输/skill体系
-> Skill总数: 21个运营类 + 7个应用开发类 + 13个内置通用 = 41个
+> 探测轮次: 15轮, 覆盖工具/网络/安全/子agent/文件系统/技能/外网突破/COME3.0/文件传输/skill体系/新skill测试
+> Skill总数: 14个系统级 + 10个新安装 + 7个应用开发类 + 13个内置通用 = 44个
 
 ## 一、运行环境
 
@@ -137,6 +137,23 @@
 
 > 管理界面: https://cagent.catl.com/app/settings/skill (需浏览器访问)
 
+### 新安装 Skill (10个, 2026-11-26 安装, 位于 workspace/skills/)
+
+| Skill | 功能 | 测试状态 |
+|-------|------|----------|
+| intranet-fetch | **内网内容抓取** | ✅脚本可用, ⚠️受NetworkPolicy限制(详见3.1) |
+| come2opencode-bridge | **虾桥, COME远程指挥OpenCode** | 已安装待测试 |
+| SSO-Login (catl-sso-login) | **万能SSO登录** | 已安装待测试 |
+| image-expert | **图片识别专家(多模型接力OCR)** | 已安装待测试 |
+| weknora-api-invocation | **Weknora知识库API调用** | 已安装待测试 |
+| memory-skill | **跨对话项目记忆** | 已安装待测试 |
+| memory-skill-full | 跨对话项目记忆(完整版) | 已安装 |
+| attendance-processor | 考勤数据查询 | 已安装 |
+| com-image-reader | 钉钉图片读取 | 已安装 |
+| come-chat-assistant | COME沟通助手 | 已安装 |
+
+> 安装方式: 浏览器访问管理界面安装, 安装后需重启Pod生效。新skill位于 `workspace/skills/` 而非 `~/.openclaw/skills/`。旧会话系统提示词不会更新, 需创建新会话才能识别新skill。
+
 ## 三、网络可达性
 
 ### 3.1 内网服务
@@ -151,6 +168,19 @@
 | KHM 知识中心 | khm.catl.com | 不可达 (超时) | TCP 不通 |
 | V盘 2.0 | vdrive.catl.com | 不可达 (超时) | TCP 不通 |
 | COME | come.catl.com | TCP 不通, **但可通过 dws 技能操作** | dws CLI 走平台内部通道, 非直连 TCP |
+| ITSM | itsm.catl.com | 不可达 (超时) | intranet-fetch测试: Python urllib超时, K8s NetworkPolicy阻断 |
+| devcdoc (朱雀知识库) | devcdoc.catl.com | 不可达 (超时) | intranet-fetch脚本白名单内, 但TCP不通 |
+
+### 3.1.1 intranet-fetch 测试结论 (2026-11-26)
+
+intranet-fetch skill 脚本本身工作正常, 能成功建立TCP连接和HTTP请求。但受K8s NetworkPolicy限制, 只能访问白名单内的内网服务:
+
+| 测试URL | 网络可达 | 结果 |
+|---------|---------|------|
+| itsm.catl.com | ❌ 超时 | K8s NetworkPolicy不通, 重试2次均超时 |
+| cagentapi.catl.com | ✅ 可达 | HTTP 404(根路径无内容, 但TCP连接成功) |
+
+**结论:** intranet-fetch走Python urllib直连TCP, 与curl/socket受同样的NetworkPolicy限制。对于itsm/devcdoc等不通的内网站点, 仍需3122做中间人抓取。该skill在员工电脑上的OpenCode中可正常工作(员工电脑在公司内网, 能直达所有*.catl.com站点)。
 
 ### 3.2 外网访问 (深挖结论)
 
