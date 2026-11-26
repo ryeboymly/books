@@ -4,6 +4,7 @@
 > 探测方式: 通过 cagentapi.catl.com API 发送测试指令
 > Agent: agent-1794400677722-fe418fb5 (agentId=14008331)
 > 探测轮次: 12轮, 覆盖工具/网络/安全/子agent/文件系统/技能/外网突破/COME3.0/文件传输/skill体系
+> Skill总数: 21个运营类 + 7个应用开发类 + 13个内置通用 = 41个
 
 ## 一、运行环境
 
@@ -79,7 +80,9 @@
 - session_status - 查看会话状态
 - tts - 文字转语音
 
-### 已安装 Skill 清单 (14个, 位于 /home/node/.openclaw/skills/)
+### 已安装 Skill 清单 (14个运营类 + 7个应用开发类 = 21个)
+
+#### 运营类 Skill (14个, 位于 /home/node/.openclaw/skills/)
 
 | Skill | 功能 | 关键细节 |
 |-------|------|----------|
@@ -97,6 +100,20 @@
 | image-recognition | **图片OCR/多模态分析** | 基于CATL平台 |
 | office-mail | **企业邮件只读查询** | 查看搜索总结收件箱邮件, 只读不支持发送/回复/转发, 通过scripts/client.py统一入口 |
 | ppt-catl | **AI生成PPT** | AI驱动多格式SVG内容生成, 输出PPTX |
+
+#### CAgent应用开发类 Skill (7个, 安装于2026-11-25, 管理界面可见)
+
+| Skill | 版本 | 功能 |
+|-------|------|------|
+| agent-apps-ui-ux | 1.3.6 | CAgent应用创建UI/UX |
+| agent-apps-troubleshoot | 1.7.0 | CAgent应用修复助手 |
+| agent-apps-review | 1.7.0 | CAgent应用审查 |
+| agent-apps-router | 1.7.1 | CAgent应用开发意图识别 |
+| agent-apps-dev | 1.7.0 | CAgent应用开发 |
+| agent-apps-brainstorming | 1.7.0 | CAgent头脑风暴 |
+| agent-apps-scaffold | - | CAgent脚手架生成 |
+
+> 这7个skill用于在CAgent平台上创建和管理AI应用, 包括UI/UX设计、开发、审查、修复、意图识别、头脑风暴和脚手架生成。管理界面: https://cagent.catl.com/app/settings/skill
 
 ### 内置通用 Skill (位于 /app/skills/)
 - skill-creator - 技能创作, 手动创建/编辑/审计SKILL.md
