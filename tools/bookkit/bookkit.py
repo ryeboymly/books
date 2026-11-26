@@ -35,6 +35,7 @@ BOOK_SUBTITLE = ""
 AUTHOR = ""
 LANG = "zh-CN"
 PACK_LO, PACK_HI = 170, 330
+MD_PACK_LO, MD_PACK_HI = 170, 150  # 仅 md 交付版使用：桌面阅读器无版心，靠薄段控节奏
 PREFACE = ""
 SENT_END = "。！？"
 CLOSE = "」』”’）)》"
@@ -319,13 +320,16 @@ def build():
     return chapters
 
 
-def render_md(chapters) -> str:
+def render_md(chapters, style="html") -> str:
+    """style="html" 保持旧结构（供 HTML/EPUB 的中间正文）；
+    style="md" 为桌面阅读优化版：书名 H1/章 H2/节 H3 + 目录锚点链接 + 更薄的段长。"""
+    md_mode = style == "md"
     out = [
         "---",
         f'title: "{BOOK_TITLE}"',
         f'subtitle: "{BOOK_SUBTITLE}"',
         f'author: "{AUTHOR}"',
-        f'lang: {LANG}',
+        f"lang: {LANG}",
         "---",
         "",
         f"# {BOOK_TITLE}",
@@ -338,20 +342,36 @@ def render_md(chapters) -> str:
         "",
     ]
     for ci, ch in enumerate(chapters, 1):
-        out.append(f"{ci}. {ch['title']}")
-        for kind, text in ch["blocks"]:
-            if kind == "h3":
-                out.append(f"   - {text}")
+        if md_mode:
+            out.append(f"- [第 {ci} 章　{ch['title']}](#ch{ci:02d})")
+            sj = 0
+            for kind, text in ch["blocks"]:
+                if kind == "h3":
+                    sj += 1
+                    out.append(f"  - [{text}](#ch{ci:02d}-s{sj:02d})")
+        else:
+            out.append(f"{ci}. {ch['title']}")
+            for kind, text in ch["blocks"]:
+                if kind == "h3":
+                    out.append(f"   - {text}")
     out.append("")
     for ci, ch in enumerate(chapters, 1):
-        out += [f"# 第 {ci} 章　{ch['title']}", ""]
+        sj = 0
+        if md_mode:
+            out += [f'<a id="ch{ci:02d}"></a>', "", f"## 第 {ci} 章　{ch['title']}", ""]
+        else:
+            out += [f"# 第 {ci} 章　{ch['title']}", ""]
         list_open = False
         for kind, text in ch["blocks"]:
             if kind == "h3":
                 if list_open:
                     out.append("")
                     list_open = False
-                out += [f"## {text}", ""]
+                if md_mode:
+                    sj += 1
+                    out += [f'<a id="ch{ci:02d}-s{sj:02d}"></a>', "", f"### {text}", ""]
+                else:
+                    out += [f"## {text}", ""]
             elif kind == "epigraph":
                 parts = text.split("\n")
                 first = True
@@ -383,75 +403,14 @@ def render_md(chapters) -> str:
                 if list_open:
                     out.append("")
                     list_open = False
-                out += [text, ""]
+                if md_mode:
+                    for p in pack(split_sentences(text), lo=MD_PACK_LO, hi=MD_PACK_HI):
+                        out += [p, ""]
+                else:
+                    out += [text, ""]
         out.append("")
     return "\n".join(out).rstrip() + "\n"
 
-
-CSS = """
-@page { margin: 5% 6%; }
-
-html, body { background: #ffffff; }
-
-body {
-  background: #ffffff;
-  color: #1a1a1a;
-  font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
-  font-size: 1em;
-  line-height: 1.85;
-}
-
-h1 {
-  font-family: "Source Han Sans SC", "Noto Sans CJK SC", "PingFang SC", sans-serif;
-  font-size: 1.45em;
-  line-height: 1.35;
-  margin: 2.4em 0 1.2em;
-  font-weight: 700;
-  page-break-before: always;
-  page-break-after: avoid;
-}
-
-h2 {
-  font-family: "Source Han Sans SC", "Noto Sans CJK SC", "PingFang SC", sans-serif;
-  font-size: 1.15em;
-  line-height: 1.5;
-  margin: 2.2em 0 0.9em;
-  font-weight: 600;
-  page-break-after: avoid;
-}
-
-p {
-  text-indent: 2em;
-  margin: 0 0 0.6em;
-  text-align: justify;
-}
-
-blockquote {
-  margin: 1.4em 1.6em;
-  padding-left: 1em;
-  border-left: 3px solid #d0d0d0;
-  color: #3d3d3d;
-  font-size: 0.95em;
-  text-indent: 0;
-}
-
-blockquote p {
-  text-indent: 0;
-  margin: 0.35em 0;
-}
-
-li {
-  text-indent: 0;
-  margin: 0.35em 0 0.35em 1.5em;
-}
-
-img { max-width: 100%; }
-"""
-
-
-
-
-# ---------- HTML ----------
 
 def subset_fonts(chars: str, outdir: Path, serif_ttc: str, sans_ttc: str) -> dict:
     """按正文用字子集化字体，返回 {serif:/path, sans:/path}；字体缺失或 pyftsubset 缺失时返回空。"""
@@ -599,11 +558,12 @@ def main():
     LINES = lines
 
     chapters = build()
-    md = render_md(chapters)
+    md = render_md(chapters, style="md")          # 交付给阅读器的 md
+    md_strict = render_md(chapters, style="html")  # HTML/EPUB 的中间正文，保持旧结构
     md_path = outdir / f"{slug}-精排版.md"
     md_path.write_text(md, encoding="utf-8")
     preface = spec.get("front_matter") or ""
-    body_md = ((preface + "\n\n") if preface else "") + (md[md.index("# 第 1 章"):] if "# 第 1 章" in md else md)
+    body_md = ((preface + "\n\n") if preface else "") + (md_strict[md_strict.index("# 第 1 章"):] if "# 第 1 章" in md_strict else md_strict)
     body_path = outdir / f"{slug}-精排版-正文.md"
     body_path.write_text(body_md, encoding="utf-8")
 
@@ -612,7 +572,7 @@ def main():
         "节": sum(1 for ch in chapters for k, _ in ch["blocks"] if k == "h3"),
         "段": sum(1 for ch in chapters for k, _ in ch["blocks"] if k == "para"),
         "列表项": sum(1 for ch in chapters for k, _ in ch["blocks"] if k == "li"),
-        "字数": len(re.sub(r"\s", "", md)),
+        "字数": len(re.sub(r"\s", "", md_strict)),
         "最长段": max((len(t) for ch in chapters for k, t in ch["blocks"] if k == "para"), default=0),
     }
     print("排版", md_path, md_path.stat().st_size, "B", json.dumps(stats, ensure_ascii=False))
@@ -620,7 +580,7 @@ def main():
     if not args.no_html:
         body_html = md_to_html_body(body_md)
         toc = build_toc(body_html)
-        chars = "".join(sorted(set(md))) + "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz，。！？、；：“”‘’（）《》【】…—·　％"
+        chars = "".join(sorted(set(md_strict))) + "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz，。！？、；：“”‘’（）《》【】…—·　％"
         fonts = subset_fonts(chars, outdir / "fonts", args.serif_ttc, args.sans_ttc)
         html = build_html(body_html, toc, spec, fonts)
         html_path = outdir / f"{slug}.html"
