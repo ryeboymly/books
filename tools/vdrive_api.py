@@ -205,6 +205,7 @@ def upload_file(path_type="ent", neid=1, nsid=1, file_path="", force_rename=Fals
         "uid": UID,
         "forceRename": "true" if force_rename else "false",
         "path": "/",
+        "bytes": str(file_size),
     }
 
     with open(file_path, "rb") as f:
