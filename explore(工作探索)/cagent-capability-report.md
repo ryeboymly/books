@@ -1,9 +1,9 @@
 # 大头虾 (C-Agent) 能力边界探测报告
 
-> 探测时间: 2026-11-26 (初版) / 2026-11-26 (更新1: 网络深挖+幻觉验证) / 2026-11-26 (更新2: cap-webfetch外网突破) / 2026-11-26 (更新3: dws/COME3.0能力发现) / 2026-11-26 (更新4: 文件传输+workspace规范)
+> 探测时间: 2026-11-26 (初版) / 2026-11-26 (更新1: 网络深挖+幻觉验证) / 2026-11-26 (更新2: cap-webfetch外网突破) / 2026-11-26 (更新3: dws/COME3.0能力发现) / 2026-11-26 (更新4: 文件传输+workspace规范) / 2026-11-26 (更新5: skill体系全量探测)
 > 探测方式: 通过 cagentapi.catl.com API 发送测试指令
 > Agent: agent-1794400677722-fe418fb5 (agentId=14008331)
-> 探测轮次: 10轮, 覆盖工具/网络/安全/子agent/文件系统/技能/外网突破/COME3.0/文件传输
+> 探测轮次: 12轮, 覆盖工具/网络/安全/子agent/文件系统/技能/外网突破/COME3.0/文件传输/skill体系
 
 ## 一、运行环境
 
@@ -72,12 +72,53 @@
   - ⚠️ 不支持: OA审批/BPM审批(走 bpm 技能), 邮件(dws mail 禁用)
   - ⚠️ 需先执行 `dws auth login` 完成设备授权登录
 
-### 其他
-- skill_workshop - 创建/更新/审查/应用技能
+### 其他内置工具
+- skill_workshop - 创建/更新/审查/应用技能提案 (action: create/update/revise/list/inspect/apply/reject/quarantine)
 - dingtalk_ask_user_question - 钉钉互动卡片 (仅钉钉通道)
 - self_improvement_log - 记录学习/错误经验
 - session_status - 查看会话状态
 - tts - 文字转语音
+
+### 已安装 Skill 清单 (14个, 位于 /home/node/.openclaw/skills/)
+
+| Skill | 功能 | 关键细节 |
+|-------|------|----------|
+| approve-travel | 出差单审批 | 查询待审批、同意/驳回出差申请 |
+| bpm-approve-batch | BPM流程批量审批 | 基于 catl_bpm_client |
+| bpm-get-todolist | BPM待办/已办查询 | |
+| bpm-query-workflowDetail | BPM流程表单详情 | |
+| cap-knowledge-query | 知识中台检索 | 公司内部术语/部门职能/流程定义 |
+| cap-mcp-connect | MCP Server连接 | 可接入外部MCP工具 |
+| cap-scheduled-task | **定时任务/提醒管理** | 创建/查看/修改/删除定时任务, 通过SKILL网关调用c-agent定时任务接口, 脚本: scripts/scheduled-task.py, 需用/opt/venv/bin/python3绝对路径调用 |
+| cap-webfetch | 外网抓取/搜索 | Chrome CDP引擎, 可访问外网网页和Bing搜索 |
+| come-group-roster | COME群成员查询 | 查询/导出群成员名单 |
+| dws | COME全产品管理 | DingTalk Work System CLI, 覆盖todo/chat/contact/calendar/doc/drive/minutes/report/sheet/aitable/ding/wiki/devdoc |
+| file-sender | **通过COME发送文件/图片** | 通过dws CLI发送, 按渠道(webchat/Come端)和对象(本人/他人/群聊)选择发送方式: webchat给本人→上传COME文档空间发链接, Come端给本人→send-by-bot, 给他人/群聊→send |
+| image-recognition | **图片OCR/多模态分析** | 基于CATL平台 |
+| office-mail | **企业邮件只读查询** | 查看搜索总结收件箱邮件, 只读不支持发送/回复/转发, 通过scripts/client.py统一入口 |
+| ppt-catl | **AI生成PPT** | AI驱动多格式SVG内容生成, 输出PPTX |
+
+### 内置通用 Skill (位于 /app/skills/)
+- skill-creator - 技能创作, 手动创建/编辑/审计SKILL.md
+- clawhub - 技能市场
+- diagram-maker - 绘图
+- healthcheck - 安全审计
+- meme-maker - 梗图
+- notion - Notion API
+- python-debugpy - Python调试
+- spike - 原型验证
+- taskflow - 任务编排
+- taskflow-inbox-triage - 收件箱分类
+- lesson - 经验记录
+- node-connect - 设备配对诊断
+- node-inspect-debugger - Node.js调试
+
+### Skill 创建能力
+大头虾可以自己创建新skill扩展能力, 有两条路径:
+1. **skill_workshop工具** - 创建提案(proposal), 自动校验格式, action=apply后写入skills目录生效
+2. **skill-creator skill** - 手动创建/编辑SKILL.md文件
+
+> 管理界面: https://cagent.catl.com/app/settings/skill (需浏览器访问)
 
 ## 三、网络可达性
 
@@ -188,6 +229,15 @@
 9. **COME3.0 操作 (dws 技能)** - 待办/消息/群聊/通讯录/日历/文档/云盘/表格/知识库/DING消息
 10. COME3.0 文档读写 - 通过 dws doc 操作 COME 文档
 11. COME3.0 云盘 - 通过 dws drive 上传/下载文件
+12. **COME发送文件/图片 (file-sender)** - 通过dws CLI发送文件, 按渠道和对象自动选择发送方式
+13. **定时任务/提醒 (cap-scheduled-task)** - 创建/查看/修改/删除定时提醒和周期任务
+14. **企业邮件查询 (office-mail)** - 只读查询收件箱邮件, 搜索/总结邮件内容
+15. **图片OCR/多模态分析 (image-recognition)** - 图片文字识别和视觉理解
+16. **AI生成PPT (ppt-catl)** - AI驱动SVG内容生成, 输出PPTX文件
+17. **BPM流程操作** - 待办查询/批量审批/流程详情查询
+18. **知识中台检索 (cap-knowledge-query)** - 公司内部术语/部门职能/流程定义
+19. **MCP Server连接 (cap-mcp-connect)** - 可接入外部MCP工具扩展能力
+20. **Skill自创建 (skill_workshop/skill-creator)** - 可自己创建新skill扩展能力
 
 ### 不可用
 1. 基础外网通道 (curl/socket/web_fetch) - K8s NetworkPolicy 全封
@@ -211,6 +261,14 @@
                  ├─ web_fetch (基础HTTP, 外网不通)
                  ├─ cap-webfetch (Chrome CDP, **外网可达**)
                  ├─ dws CLI (COME3.0 全产品线, 需 auth login)
+                 ├─ file-sender (COME发送文件/图片)
+                 ├─ cap-scheduled-task (定时任务/提醒)
+                 ├─ office-mail (企业邮件只读查询)
+                 ├─ image-recognition (图片OCR/多模态)
+                 ├─ ppt-catl (AI生成PPT)
+                 ├─ bpm-* (BPM流程操作)
+                 ├─ cap-mcp-connect (MCP Server连接)
+                 ├─ skill_workshop (创建新skill)
                  └─ ctokenai.catl.com (深度研究, API不公开)
 ```
 
