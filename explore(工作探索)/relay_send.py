@@ -44,14 +44,30 @@ def _http(method, host, path, token, body=None, headers_extra=None):
     return resp.status, raw
 
 
-# ── cagentapi 聊天 ──
+# ── cagentapi 聊天（session复用）──
+
+_session_id = None  # 全局session，复用避免每次新开窗口
 
 def _create_session(title="relay"):
+    global _session_id
     status, raw = _http("POST", CAGENT_HOST, "/c-agent/v1/chat/sessions", CAGENT_TOKEN,
                         {"agentId": CAGENT_AGENT_ID, "content": title})
     if status in (200, 201):
-        return json.loads(raw).get("id", "")
+        _session_id = json.loads(raw).get("id", "")
+        return _session_id
     return None
+
+def _get_session():
+    """获取或创建session，复用已有的"""
+    global _session_id
+    if _session_id:
+        return _session_id
+    return _create_session()
+
+def _reset_session():
+    """重置session（失效时调用）"""
+    global _session_id
+    _session_id = None
 
 
 def _stream_message(sid, content, max_retries=2):
@@ -100,18 +116,19 @@ def _stream_message(sid, content, max_retries=2):
 
 
 def cagent_send(content, max_retries=2):
+    """发送消息，复用同一session。session失效时自动重建。"""
     for attempt in range(max_retries + 1):
-        sid = _create_session()
+        sid = _get_session()
         if not sid:
             if attempt < max_retries:
                 print(f"  [重试 {attempt+1}/{max_retries}] session创建失败")
                 time.sleep(3)
                 continue
             return "ERROR: 无法创建session"
-        time.sleep(1)
         reply = _stream_message(sid, content)
         if reply.startswith("ERROR") and attempt < max_retries:
             print(f"  [重试 {attempt+1}/{max_retries}] {reply[:80]}")
+            _reset_session()  # session可能失效，重置后重建
             time.sleep(3)
             continue
         return reply
