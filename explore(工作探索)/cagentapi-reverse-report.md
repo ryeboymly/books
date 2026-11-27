@@ -10,35 +10,79 @@
 
 Token: `a4bd924d..._3`（3122→大头虾方向）
 
-### ✅ 可用端点（7个）
+### ✅ 可用端点（10个）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/c-agent/v1/agents/{agentId}` | Agent完整详情（名称/类型/K8s/配置/权限） |
+| GET | `/c-agent/v1/agents/{agentId}/skills` | Agent已装技能列表（当前为空） |
+| GET | `/c-agent/v1/skills?page=0&size=N` | 🔥 全平台技能库（1642个技能，含下载量/热度） |
+| GET | `/c-agent/v1/skills/{id}` | 单个技能详情 |
 | GET | `/c-agent/v1/chat/sessions?agentId={id}&page=0&size=N` | Session列表（含source/modelCode/runStatus） |
 | POST | `/c-agent/v1/chat/sessions` | 创建Session（body: `{agentId, content}`） |
 | GET | `/c-agent/v1/chat/sessions/{sessionId}/messages?page=0&size=N` | **消息历史**（含user+assistant全部消息） |
 | POST | `/c-agent/v1/chat/stream` | 发消息（SSE流式，body: `{sessionId, content}`） |
-| POST | `/c-agent/v1/chat/completions` | OpenAI兼容端点（需sessionId+messages+model） |
+| POST | `/c-agent/v1/chat/completions` | 🔥 OpenAI兼容端点（非流式，需sessionId+agentId+model+messages） |
 | DELETE | `/c-agent/v1/chat/sessions/{id}` | 删除Session |
 
 ### ❌ 403端点（存在但无权限）
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/c-agent/v1/agents` | 列出所有agent |
-| GET | `/c-agent/v1/models` | 模型列表 |
-| PUT | `/c-agent/v1/chat/sessions/{id}` | 更新session标题 |
-| GET | `/c-agent/v1/agents/{id}/tools` | agent工具列表 |
-| GET | `/c-agent/v1/agents/{id}/config` | agent配置 |
-| GET | `/c-agent/v1/agents/{id}/detail` | agent详情v2 |
-| GET | `/c-agent/v1/health` | 健康检查 |
-| GET | `/c-agent/v1/version` | 版本信息 |
-| GET | `/c-agent/v1/v3/api-docs` | OpenAPI文档 |
+| 方法 | 路径 | 说明 | 权限要求 |
+|------|------|------|----------|
+| GET | `/c-agent/v1/agents` | 列出所有agent | 管理员 |
+| GET | `/c-agent/v1/models` | 模型列表 | 管理员 |
+| PUT | `/c-agent/v1/chat/sessions/{id}` | 更新session标题 | 管理员 |
+| GET | `/c-agent/v1/agents/{id}/tools` | agent工具列表 | 管理员 |
+| GET | `/c-agent/v1/agents/{id}/config` | agent配置 | 管理员 |
+| GET | `/c-agent/v1/agents/{id}/detail` | agent详情v2 | 管理员 |
+| GET | `/c-agent/v1/agents/{id}/memory` | agent记忆 | 管理员 |
+| GET | `/c-agent/v1/agents/{id}/files` | agent文件 | 管理员 |
+| GET | `/c-agent/v1/agents/{id}/logs` | agent日志 | 管理员 |
+| GET | `/c-agent/v1/agents/{id}/cron` | 定时任务列表 | 管理员 |
+| GET | `/c-agent/v1/agents/{id}/schedules` | 调度列表 | 管理员 |
+| GET | `/c-agent/v1/health` | 健康检查 | 管理员 |
+| GET | `/c-agent/v1/version` | 版本信息 | 管理员 |
+| GET | `/c-agent/v1/v3/api-docs` | OpenAPI文档 | 管理员 |
+
+### qpaas.catl.com（K8s API Server）
+
+| 认证方式 | 结果 |
+|----------|------|
+| Bearer token (cagentapi) | 401 Unauthorized |
+| Bearer token (agentapi) | 401 Unauthorized |
+| X-Auth-Token header | 403 (认证通过但映射为system:anonymous) |
+
+qpaas底层是Kubernetes API Server，返回标准K8s错误格式：
+```json
+{"message":"agents \"14008331\" is forbidden: User \"system:anonymous\" cannot get resource \"agents\""}
+```
+需要K8s ServiceAccount Token才能访问，我们的token没有K8s权限。
 
 ### 关键发现
 
-#### 1. 消息历史API（重大发现）
+#### 0. OpenAI兼容端点（重大发现）
+```
+POST /c-agent/v1/chat/completions
+Body: {model, messages, sessionId, agentId, stream, temperature?, max_tokens?}
+```
+- 非流式同步返回，比SSE简单得多
+- 必填参数：model(`openclaw/default`) + messages + sessionId + agentId
+- 可选参数：stream(false) + temperature + max_tokens
+- 返回标准OpenAI格式：`{id, object, created, model, choices[{message, finishReason}], usage}`
+- system message有效但大头虾会用自己的SOUL覆盖
+- 只接受model=`openclaw/default`，agent model code返回400
+
+#### 1. 技能库（重大发现）
+```
+GET /c-agent/v1/skills?page=0&size=N   → 1642个技能
+GET /c-agent/v1/skills/{id}             → 单个技能详情
+```
+- 技能类型：office/coding/agent
+- 每个技能含：skillCode, skillName, skillType, description, downloadCount, likeCount, hotScore
+- 示例技能：work-summary-report, image-expert, come-chat-assistant, ppt-generator
+- Agent已装技能查询返回空（技能由OpenClaw内部管理，不走API注册）
+
+#### 2. 消息历史API（重大发现）
 ```
 GET /c-agent/v1/chat/sessions/{sessionId}/messages?page=0&size=20
 ```
@@ -220,3 +264,6 @@ Token: `e88063d6..._3`（大头虾→3122方向）
 - cagentapi token绑定到agentId=14008331，只能操作该agent的session和消息
 - agentapi token只有fileManagement权限，无chat权限（403）
 - 两个token的权限互补，不重叠
+- 403端点全部是平台级RBAC权限边界，非API设计缺陷
+- qpaas需要K8s ServiceAccount Token，与cagentapi token体系完全独立
+- 无法通过换路径、换HTTP方法、换认证头绕过
