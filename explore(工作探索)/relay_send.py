@@ -11,10 +11,10 @@ import base64, hashlib, json, math, os, subprocess, sys, time, http.client, ssl,
 
 # ── 配置 ──
 FM_HOST = "agentapi.catl.com"
-FM_TOKEN = "e88063d6-0a1b-4ae2-9b81-e89ce226029d_3"
+FM_TOKEN = os.environ.get("FM_TOKEN", "")
 FM_BASE = "/vision-ai-platform/v1/fileManagement"
 CAGENT_HOST = "cagentapi.catl.com"
-CAGENT_TOKEN = "a4bd924d-6bf8-46ce-a888-1bdde99d13bc_3"
+CAGENT_TOKEN = os.environ.get("CAGENT_TOKEN", "")
 CAGENT_AGENT_ID = "14008331"
 GITHUB_PAT = os.environ.get("GITHUB_PAT", "")
 GITHUB_REPO = "ryeboymly/books"
