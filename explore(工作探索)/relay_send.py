@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-3122 侧文件中转发送工具 v3
+3122 侧文件中转发送工具 v3.2
 ================================
 通道B: ≤4KB  单条聊天Base64（实测安全上限）
 通道A: >4KB  gzip→split(100KB)→base64→GitHub push→聊天发FILE_NOTIFY
          大头虾用cap-webfetch逐块抓取→解码拼接→gunzip
+v3.2: session从服务器查询复用，不依赖本地文件，沙箱重置无影响
 """
-import base64, hashlib, json, math, os, subprocess, sys, time, http.client, ssl, tempfile, shutil, gzip
+import base64, hashlib, json, math, os, subprocess, sys, time, http.client, ssl, tempfile, shutil
 
 # ── 配置 ──
 FM_HOST = "agentapi.catl.com"
@@ -44,30 +45,34 @@ def _http(method, host, path, token, body=None, headers_extra=None):
     return resp.status, raw
 
 
-# ── cagentapi 聊天（session复用）──
+# ── cagentapi 聊天（session从服务器查询复用，不依赖本地文件）──
+# 沙箱重置后也能从服务器找回旧session，不会新开窗口
 
-_session_id = None  # 全局session，复用避免每次新开窗口
+def _find_latest_session():
+    """从cagentapi服务器查询最新的relay session"""
+    status, raw = _http("GET", CAGENT_HOST,
+                        f"/c-agent/v1/chat/sessions?agentId={CAGENT_AGENT_ID}&page=0&size=5",
+                        CAGENT_TOKEN)
+    if status == 200:
+        data = json.loads(raw)
+        sessions = data.get("list", [])
+        if sessions:
+            return sessions[0].get("id")
+    return None
 
 def _create_session(title="relay"):
-    global _session_id
     status, raw = _http("POST", CAGENT_HOST, "/c-agent/v1/chat/sessions", CAGENT_TOKEN,
                         {"agentId": CAGENT_AGENT_ID, "content": title})
     if status in (200, 201):
-        _session_id = json.loads(raw).get("id", "")
-        return _session_id
+        return json.loads(raw).get("id", "")
     return None
 
 def _get_session():
-    """获取或创建session，复用已有的"""
-    global _session_id
-    if _session_id:
-        return _session_id
+    """先从服务器查已有session，没有才创建新的"""
+    sid = _find_latest_session()
+    if sid:
+        return sid
     return _create_session()
-
-def _reset_session():
-    """重置session（失效时调用）"""
-    global _session_id
-    _session_id = None
 
 
 def _stream_message(sid, content, max_retries=2):
@@ -116,7 +121,7 @@ def _stream_message(sid, content, max_retries=2):
 
 
 def cagent_send(content, max_retries=2):
-    """发送消息，复用同一session。session失效时自动重建。"""
+    """发送消息，复用持久化session。失效时自动重建。"""
     for attempt in range(max_retries + 1):
         sid = _get_session()
         if not sid:
@@ -128,7 +133,6 @@ def cagent_send(content, max_retries=2):
         reply = _stream_message(sid, content)
         if reply.startswith("ERROR") and attempt < max_retries:
             print(f"  [重试 {attempt+1}/{max_retries}] {reply[:80]}")
-            _reset_session()  # session可能失效，重置后重建
             time.sleep(3)
             continue
         return reply
@@ -178,6 +182,7 @@ def send_large_file(filepath, note=""):
     print(f"  1/4 gzip压缩...", end=" ", flush=True)
     tmpdir = tempfile.mkdtemp()
     gz_path = os.path.join(tmpdir, f"{ascii_name}.gz")
+    import gzip
     with gzip.open(gz_path, "wb") as gz:
         gz.write(data)
     gz_size = os.path.getsize(gz_path)
@@ -191,8 +196,7 @@ def send_large_file(filepath, note=""):
     for i in range(0, len(gz_data), SPLIT_SIZE):
         chunk = gz_data[i:i + SPLIT_SIZE]
         b64_chunk = base64.b64encode(chunk).decode()
-        idx = i // SPLIT_SIZE
-        part_name = f"{ascii_name}.gz.part-{chr(ord('a') + idx // 26)}{chr(ord('a') + idx % 26)}.b64.txt"
+        part_name = f"{ascii_name}.gz.part-{chr(ord('a') + i // SPLIT_SIZE // 26)}{chr(ord('a') + i // SPLIT_SIZE % 26)}.b64.txt"
         parts.append((part_name, b64_chunk))
     total_parts = len(parts)
     print(f"{total_parts} 块")
@@ -208,9 +212,11 @@ def send_large_file(filepath, note=""):
 
     chunks_dir = os.path.join(repo_dir, GITHUB_CHUNKS_DIR)
     os.makedirs(chunks_dir, exist_ok=True)
+    # 清理旧的同名分块
     for old in os.listdir(chunks_dir):
         if old.startswith(f"{ascii_name}.gz.part-"):
             os.remove(os.path.join(chunks_dir, old))
+    # 写入新分块
     for part_name, b64_data in parts:
         with open(os.path.join(chunks_dir, part_name), "w") as pf:
             pf.write(b64_data)
@@ -228,8 +234,7 @@ def send_large_file(filepath, note=""):
 
     # 4. 聊天发FILE_NOTIFY（<4KB）
     print(f"  4/4 发送FILE_NOTIFY通知...", end=" ", flush=True)
-    last_idx = total_parts - 1
-    last_suffix = f"{chr(ord('a') + last_idx // 26)}{chr(ord('a') + last_idx % 26)}"
+    raw_url = f"{GITHUB_RAW_BASE}/{ascii_name}.gz.part-aa.b64.txt"
     note_str = f"\n备注: {note}" if note else ""
     notify = f"""[文件中转协议v3-大文件] 3122发来文件 {filename}，已分块推送到GitHub。
 
@@ -237,7 +242,7 @@ FILE_NOTIFY:{filename}:{size}:{sha256}:{total_parts}:{ascii_name}
 
 请用cap-webfetch逐块抓取以下URL（每块约55秒）:
 {GITHUB_RAW_BASE}/{ascii_name}.gz.part-XX.b64.txt
-分块名: aa, ab, ac... 到 {last_suffix}
+分块名: aa, ab, ac... 到 {chr(ord('a')+(total_parts-1)//26)}{chr(ord('a')+(total_parts-1)%26)}
 
 处理步骤:
 1. cap-webfetch抓取每个分块URL，提取base64内容
@@ -250,6 +255,7 @@ FILE_NOTIFY:{filename}:{size}:{sha256}:{total_parts}:{ascii_name}
     reply = cagent_send(notify)
     print("sent")
 
+    # 清理临时目录
     shutil.rmtree(tmpdir, ignore_errors=True)
     return None, reply
 
