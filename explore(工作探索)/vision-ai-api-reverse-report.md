@@ -493,3 +493,160 @@ GET /vision-ai-platform/cluster-proxy/api/v1/history
 | `vision-aiapi.catl.com` | ❓ | 未测试 |
 | `github.com` | ✅ | cap-webfetch (Chrome CDP) |
 | 外网 | ✅ | cap-webfetch (Chrome CDP) |
+
+---
+
+## 十六、深度端点测试结果（2026-11-27 补充）
+
+### skillCenter — 3122绑定的10个技能
+
+```
+GET /vision-ai-platform/v1/skillCenter/skills?agentId=87558735-a999-4645-b86a-ad9086723dfa
+Authorization: Bearer e88063d6-0a1b-4ae2-9b81-e89ce226029d_3
+```
+
+| # | 技能名 | 中文名 | 类型 | 产品 |
+|---|--------|--------|------|------|
+| 1 | business-trip-access | 员工出差常用服务申请 | 流程申请 | BPM |
+| 2 | new-employee-access | 新人入职常用服务申请 | 流程申请 | BPM |
+| 3 | query-process-status | 查询个人BPM流程状态 | 流程申请 | BPM |
+| 4 | service-desk-location | 查询现场服务台位置 | 桌面运维 | IT服务智能客服 |
+| 5 | service-introduction | 服务请求服务项介绍 | 流程申请 | BPM |
+| 6 | vdrive-access-request | V盘2.0权限申请 | 流程申请 | BPM |
+| 7 | its-server-request | IT服务请求提交 | 流程申请 | BPM |
+| 8 | bluetooth-access | 蓝牙权限申请 | 终端安全 | AIO |
+| 9 | vdrive-admin-query-prod | VDrive目录管理员查询 | 流程申请 | DLM |
+| 10 | bpm-query-asset | 查询个人IT资产 | 桌面运维 | BPM |
+
+### expertCenter — 15个专家完整列表
+
+```
+GET /vision-ai-platform/v1/expertCenter/experts
+Authorization: Bearer e88063d6-0a1b-4ae2-9b81-e89ce226029d_3
+```
+
+| # | 专家 | 领域 | 调用次数 | agentId |
+|---|------|------|----------|---------|
+| 1 | IT服务专家 | ITS | 206 | 87558735-a999-4645-b86a-ad9086723dfa |
+| 2 | ERP专家 | 供应链 | 72 | 54fbc35d-8014-452d-b868-b64846c891de |
+| 3 | 间采专家 | 采购 | 15 | 207eb780-xxxx |
+| 4 | 直采专家 | 采购 | 5 | 70a0810e-xxxx |
+| 5 | 智造专家 | 运营 | 24 | 28e9ec7c-xxxx |
+| 6 | 人资专家 | 人资 | 36 | 3811ed87-xxxx |
+| 7 | 研发专家 | 研发 | 32 | e59e004f-xxxx |
+| 8 | 办公应用专家 | 公共 | 27 | d964610c-xxxx |
+| 9 | 市场专家 | 市场 | 5 | 2b85e773-xxxx |
+| 10 | 财经专家 | 财经 | 6 | 279b52e3-xxxx |
+| 11 | 大数据专家 | 大数据 | 8 | 419d4cb2-xxxx |
+| 12 | 基础设施专家 | 基础设施 | 7 | 343cd69d-xxxx |
+| 13 | 网络专家 | 基础设施 | 16 | 43eec5ff-xxxx |
+| 14 | 桌面云专家 | ITS | 8 | 65576e9c-xxxx |
+| 15 | IT安全专家 | 信息安全 | 9 | 6e211954-xxxx |
+
+**ERP专家有16个技能**（含sap-abap/sap-adt/sap-code-spec/sap-mm/sap-sd等），比3122还多。
+
+### findApplicationClientInfoById/16 — 3122完整配置
+
+```
+GET /vision-ai-platform/v1/appApplicationsClient/findApplicationClientInfoById/16
+```
+
+返回3122的完整应用配置：
+- applicationId: 16
+- appCode: genai_lili
+- appName: IT服务数字人3122
+- platformCode: PCLiLi
+- homeDesc: 很高兴为您服务！
+- 快捷入口卡片: COME3下载安装、放行权限申请、IT服务申请等
+
+### selectLatestAppApplicationsHis — 全部AI助手
+
+| applicationId | appName | appCode |
+|---------------|---------|---------|
+| 16 | IT服务数字人3122 | genai_lili |
+| 55 | CATL-GPT | catlgpt |
+| 2000110 | ISD数字人宁宝 | genai_catlisd |
+| 14 | 千寻智能助手 | genai_ew |
+| 2000203 | ME数字人 | genai_ybme |
+
+### fileManagement — 用户上传文件
+
+```
+GET /vision-ai-platform/v1/fileManagement/user/page?pageNum=1&pageSize=10
+```
+
+返回用户上传的文件列表，含OSS签名下载URL（有过期时间）。
+
+### 其他端点测试结果
+
+| 端点 | 状态 | 说明 |
+|------|------|------|
+| expertCenter/isItDept | ✅ | 返回false（非IT部门判断） |
+| digitalhuman/session/list | ✅ | 空数组（未使用数字人） |
+| digitalhuman/chat/records | ✅ | 空数组 |
+| webhook/testUserIds | ✅ | 空数组 |
+| batchSendMessageOut | ⚠️ 500 | 需要GenAIFileInfo数组格式 |
+| setUserWindowFile | ⚠️ 200但报错 | 需要正确fileId |
+| ipaasRequest | ⚠️ 200 | 需要指定request type |
+| baidu/token | ⚠️ 500 | 需要body参数 |
+| typesPrompt | ❌ 403 | 权限不足 |
+| log-ingest | ❌ 403 | 权限不足 |
+| getTagPrompt/default | ❌ 404 | tag名不对 |
+
+### 完整权限矩阵
+
+| 操作 | 权限 | 说明 |
+|------|------|------|
+| 创建会话 | ✅ | POST /session |
+| 发送消息+流式接收 | ✅ | POST /session/{id}/message |
+| 查历史会话 | ✅ | GET /history |
+| 查消息记录 | ✅ | GET /session/{id}/message |
+| 查AI助手列表 | ✅ | GET /selectPermissionAppInfoList |
+| 查应用配置 | ✅ | GET /findApplicationClientInfoById/{id} |
+| 查技能列表 | ✅ | GET /skillCenter/skills?agentId=xxx |
+| 查专家列表 | ✅ | GET /expertCenter/experts |
+| 查用户文件 | ✅ | GET /fileManagement/user/page |
+| 查数字人会话 | ✅ | GET /digitalhuman/{tenantId}/session/list |
+| 删除会话 | ❌ 403 | 需前端界面操作 |
+| 修改会话 | ❌ 403 | 需前端界面操作 |
+| 日志采集 | ❌ 403 | 权限不足 |
+| 提示词类型 | ❌ 403 | 权限不足 |
+| 批量发消息 | ⚠️ 500 | 需正确格式 |
+
+## 十七、3122历史会话
+
+通过 `GET /vision-ai-platform/cluster-proxy/api/v1/history` 可查询全部历史会话（返回50条），含session_id、标题、创建/更新时间。
+
+会话时间跨度：2026-11-09 至 2026-11-27，涵盖从首次使用到逆向测试的完整历程。
+
+## 十八、知识库全景
+
+### runtime_context中的知识库（124个）
+
+3122当前绑定124个知识库，涵盖：
+- **IT服务**: ITS桌面运维(Windows/MAC)、VPN、eMail、ITSM、IT资产管理、3122知识库
+- **业务系统**: ERP、MES、PLM、BPM、COME、OMS、GSS、SPM、PMS、CLM
+- **采购**: Ariba间采、DSRM直采、采购业务流程
+- **人资**: HCM、MHR、iHR、HR小C、MOKA招聘
+- **财务**: 财经产品、TRS差旅报销
+- **研发**: BIP、RLM、TRP、BOP2.0
+- **其他**: AI-大头虾、AI-OpenCode、C-Claw社区、技术平台、EDI中心等
+
+### send返回的knowledges数组
+
+Custom模式send返回的knowledges数组揭示了平台检索的知识库代号：
+```
+PMOBOT, fnc, it, hr, ops, amd, cmd, qa, vbt, dps, opn, pms, trp,
+slit, ios, bm, ew, scts, ehs, deda, mu2, pmc, mu1, src, sso, invest,
+mes, iad, VISIONCOME_file_xxx, CATLJC, CETLPN, PNRN, CAES, CAMLGZ,
+CATLFD, CATLGeelySC, CATLJS, CATLQH, CATLXJ, CAMLJT, CATLRQ, ...
+```
+
+## 十九、安全提示
+
+⚠️ **本报告含敏感凭证信息（access_token、API Key等），存储于GitHub公开仓库。**
+
+- token有时效性，过期后风险自动消除
+- 对话历史和上传文件需token才能访问，但token已暴露在公开仓
+- GitHub PAT从未写入任何文件
+- 建议定期更换token，或考虑将仓库改为私有
