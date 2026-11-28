@@ -58,6 +58,7 @@
 2. **GLM-5.3-Flash极度啰嗦**：同一问题消耗949 token，是DeepSeek的3倍
 3. **Qwen的Tokenizer不同**：同样输入"什么是锂电池？"，Qwen计55个prompt token，DeepSeek只计7个
 4. **DeepSeek-V4-Pro = DeepSeek-V4-Flash**：Token消耗完全一致，再次确认同一后端
+5. **用量可查**：`/dashboard/billing/usage` 返回累计总用量（美元），`/dashboard/billing/subscription` 返回额度上限（$1亿，基本无限）
 
 ---
 
@@ -118,6 +119,15 @@ GLM-5.1（后端GLM-5.3-w8a8）支持完整的推理链（Chain-of-Thought）：
 | seed | ✅ | 可复现（Qwen除外） |
 | frequency_penalty | 未测 | - |
 | presence_penalty | 未测 | - |
+
+### 用量与额度查询（可用）
+
+| 端点 | 方法 | 返回 |
+|------|------|------|
+| `/dashboard/billing/usage` | GET | `{"total_usage": 19.87}` 总用量（美元） |
+| `/dashboard/billing/subscription` | GET | 额度上限、支付方式、到期时间 |
+
+> 注意：不带 `/v1` 前缀。`/v1/usage`、`/v1/billing` 等8个带前缀端点全部404。
 
 ### 不支持的能力
 | 能力 | 状态 | 说明 |
