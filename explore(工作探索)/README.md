@@ -6,16 +6,23 @@
 
 | 文件 | 主题 |
 |------|------|
-| 3122-system-architecture.md | 3122 系统完整运行机制 |
+| 3122-system-architecture.md | 3122 系统运行机制（压缩版） |
 | aigate.md | AI 网关逆向（三合一轮次合并版） |
 | cagent-architecture.md | 大头虾架构与能力（五合一轮次合并版） |
 | cagent-api.md | 大头虾 API 逆向（合并版） |
 | khm-upload-guide.md | KHM 上传指南 |
 | vdrive-api-guide.md | V 盘 API 指南 |
-| vision-ai-api-reverse-report.md | 视觉 AI 逆向报告 |
+| vision-ai-api-reverse-report.md | 视觉 AI 逆向（压缩版） |
 | relay-channel-optimization.md | 通信通道优化 v2.0 |
-| books-reorg-comparison-v2.md | 仓库整理三模型对比报告 |
+
+## archive/
+
+一次性存档，只做留痕，不进首轮阅读。
+
+| 文件 | 主题 |
+|------|------|
 | archive-2026-11-27.md | 11-27 工作存档 |
+| books-reorg-comparison-v2.md | 仓库整理三模型对比报告 |
 
 ## scripts/
 
