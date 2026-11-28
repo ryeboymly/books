@@ -111,30 +111,13 @@ SSE 回复需 EventSource 长连接，curl 无法保持。
 | OAuth URL | `https://vision-aiapi.catl.com/rosefinch-oauth/oauth/authorize` |
 | Token Swap | `https://ipaas.catl.com/gateway/outside/ipaas/ROSE/outer_ROSEFINCH_come3TokenSwap` |
 
-## 十、MCP 配置（大头虾侧，Key 已脱敏）
+## 十、MCP（大头虾侧，Key 已脱敏）
 
-```yaml
-mcpServers:
-  mcp-mucket:
-    type: "remote"
-    url: "https://mcpmarketapi.catl.com/mcp"
-    timeout: 120000
-    headers:
-      X-API-Key: "<mcp_api_key>"
-      system: "OPENCLAW"
-      X-Platform: "C-AGENT"
-```
+配置见 `cagent-architecture.md` 的 MCP 段。调用流程：`POST /mcp` initialize（带 Key + `Accept: text/event-stream`）→ 取 `Mcp-Session-Id` → `tools/call`。工具三个：`knowledgeRetrievalPersonal`（未测）、`knowledgeRetrieval`（500，OAuth 密钥过期）、`cclawCommunitySearch`（✅，674 标签）。
 
-调用流程：`POST /mcp` initialize（带 Key + `Accept: text/event-stream`）→ 取 `Mcp-Session-Id` → `tools/call`。工具三个：`knowledgeRetrievalPersonal`（未测）、`knowledgeRetrieval`（500，OAuth 密钥过期）、`cclawCommunitySearch`（✅，674 标签）。
+## 十一、C-Agent API
 
-## 十一、C-Agent API（大头虾）
-
-```
-Host: https://cagentapi.catl.com    agentId: 14008331    Token: <cagentapi_token>
-POST /c-agent/v1/chat/sessions  {"agentId":"14008331","content":"init"}
-POST /c-agent/v1/chat/stream    {"sessionId":sid,"content":"...","agentId":14008331}
-  headers: Bearer, Accept: text/event-stream, Cache-Control: no-cache, X-Accel-Buffering: no
-```
+大头虾的 cagentapi 端点、参数与踩坑见 `cagent-api.md`，此处不重复。
 
 ## 十二、精简 Python 示例（WeKnora 模式）
 
@@ -215,4 +198,4 @@ while (chunk:=r.read(4096)):
 
 ## 十八、安全提示
 
-本报告原文含 access_token、iPaaS 密钥、MCP Key 等凭据，现已全部脱敏为占位符；token 本身有时效，过期后风险自动消除。仓库仍建议定期更换 token 或转私有。
+原文凭据已全部脱敏为占位符；token 有时效，过期后风险消除。仓库仍建议定期换 token 或转私有。

@@ -74,16 +74,15 @@ data:[DONE]
 
 4. 之后可 `GET /chat/sessions?agentId=…` 列会话、`GET /chat/sessions/{id}/messages` 读历史、`GET /chat/sessions/{id}/feedbacks` 读反馈。
 
-## 六、其他已验证 GET 接口
+## 六、其他 GET
 
-`/c-agent/v1/agents/my`、`/my/api-keys`、`/my/robots`、`/agents/cronjobs?agentId=X`、`/agents/{id}/skills`、`/knowledge/config`、`/mcp-tools/config`、`/admin/auths/my-agents`、`/applications?permissionType=OWNER`，全部 200。
+`agents/my`、`my/api-keys`、`my/robots`、`agents/cronjobs`、`knowledge/config`、`mcp-tools/config`、`auths/my-agents`、`applications` 等 9 个接口均返回 200，内容无实质信息。
 
 ## 七、关键发现
 
 1. **技能库**：`/skills?page=0&size=N` 返回 1642 个技能，含 `skillCode` / `skillName` / `skillType`（office / coding / agent）/ `downloadCount` / `likeCount` / `hotScore`。
 2. **消息历史**：可读任意 session 的全部消息，按时间倒序；assistant 的 `content` 是 OpenAI 格式 JSON 字符串，user 的是纯文本。
 3. **Session `source`**：`web`（网页 / API）/ `cron`（定时任务）。
-4. **`runStatus`**：`completed` 已确认，其余待观察。
 5. **开放接口前缀**：环境变量暴露 `/c-agent/open-api/v1/dingtalk/feedback-snapshots`，同前缀下可能还有更多端点。
 
 ## 八、agentapi.catl.com
@@ -111,13 +110,10 @@ python3 cagent_api.py --list                 # 列会话
 python3 cagent_api.py --history 14098810     # 读历史
 ```
 
-## 十、踩坑记录
+## 十、踩坑
 
-1. 发消息用 `/chat/stream`，不是 `/chat/sessions/{id}/messages`；后者 POST 会 403（它是 GET 读历史）。
-2. SSE 三个头必须带，缺了可能被拒。
-3. `sessionId` 是数字，body 里不要加引号。
-4. `POST /chat/sessions` 的 `content` 不会触发回复，必须再调 `/chat/stream`。
-5. 聊天 API 对 payload 有超时限制，单条消息不宜超过 4KB。
+1. 发消息只能走 `/chat/stream`；`/chat/sessions/{id}/messages` 的 POST 会 403（它只读历史）。SSE 三头必带，`sessionId` 不加引号，建会话的 `content` 不触发回复。
+2. 单条消息不宜超过 4KB，聊天 API 对 payload 有超时限制。
 
 ## 十一、定时任务（4 个，全部 ENABLED）
 

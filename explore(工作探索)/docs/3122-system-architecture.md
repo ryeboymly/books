@@ -6,12 +6,7 @@
 
 ## 一、核心修正
 
-| 之前表述 | 修正为 | 原因 |
-|---|---|---|
-| system prompt 是黑盒 | **完全可见**，就在上下文指令里 | 能逐条读到角色、硬约束、检索策略、输出规则 |
-| 平台层是黑盒 | **可观测**，能描述完整运行逻辑 | 能描述 ≠ 能控制 |
-| summary 完全不可控 | **间接可控**，控制对话内容可影响摘要 | 结构化记录能提高保留率 |
-| runtime_context 看不到 | **完全可见**，124 知识库 + 60 技能 + MCP 全量 | 每个库的 ID/名称/类型/文档数/描述都能看到 |
+早期版本把这几项当成黑盒，实际全部可见：system prompt（18 节）、runtime_context（124 库 + 60 技能 + MCP）、compacted summary、11 个工具定义。关键区分仍是**可见 ≠ 可改**。
 
 ## 二、系统提示词（18 节，关键段落保留原文）
 
@@ -205,7 +200,7 @@ bus 协议：`inbox/to-catl/`（豆包→3122）、`inbox/to-mly/`（3122→豆�
 
 大头虾定时任务 4 个：relay-file-check（每小时，查 bus 新信）、私信回复（每小时）、AI 日报（8:00）、冷压故障转发（6:00）。
 
-cagentapi 可用 10 端点：`GET /agents/{id}`、`/agents/{id}/skills`、`/skills`、`/skills/{id}`、`/chat/sessions`、`POST /chat/sessions`、`DELETE /chat/sessions/{sid}`、`GET /chat/sessions/{sid}/messages`、`POST /chat/stream`、`POST /chat/completions`。
+cagentapi 与 agentapi 的端点、参数与踩坑见 `cagent-api.md`，此处不重复。
 
 ## 八、可见性 vs 可控性
 

@@ -24,17 +24,7 @@
 
 ## 二、双入口架构
 
-同一个 Agent，两个入口，区别只在通道插件。
-
-```
-OpenClaw Pod（AGENT_ID=14008331，model=cagent-auto）
-  ├─ main（主会话）
-  ├─ mail / come / bpm / code（子代理，共 5 个）
-  └─ 记忆：lance.db ↔ MEMORY.md ↔ daily logs
-        │
-        ├─ cagentapi（Web API）→ 网页聊天室
-        └─ dingtalk-connector → COME3.0 机器人
-```
+同一个 Agent，两个入口，区别只在通道插件：cagentapi（Web API）对应网页聊天室，dingtalk-connector 对应 COME3.0 机器人；模型与记忆完全互通。
 
 | 维度 | COME3.0 版 | 网页版（cagentapi） |
 |---|---|---|
@@ -56,8 +46,6 @@ OpenClaw Pod（AGENT_ID=14008331，model=cagent-auto）
 | code | 后端 / 前端 / 脚本 / 算法代码 | `workspace-code` |
 
 权限模型：main 可派生全部；mail / come / bpm 设 `deny: sessions_spawn`，不能再派生；code 只能派生自身。main 与 code 带 `thinkingDefault: medium`。所有子代理模型运行时解析为 `default/cagent-auto`。
-
-> 口径更正：旧架构稿标题写「子代理体系（6 个）」，表内只列 5 条，实为 5 个。本文件统一按 5 个记。
 
 ## 四、Cap 能力（4 个）
 
@@ -101,9 +89,7 @@ OpenClaw Pod（AGENT_ID=14008331，model=cagent-auto）
 
 扩展 8 个：ClawAegis-main（安全核心）、agent-insight、agent-insight-otel、cron-throttle、dws-auth-guard、host-tools、mcp-header-injector、subagent-yield。插件 1 个：agent-aegis。钩子 2 个：agent-insight-otel、load-custom-prompts。
 
-环境变量（只列名，值不入档）：`AGENT_ID`、`MODEL_ID`、`MODEL_ID_1000000`、`IMAGE_MODEL_ID`、`LANGFUSE_ENV`、`OPENCLAW_GATEWAY_TOKEN`、`OPENCLAW_GATEWAY_PORT`、`OPENCLAW_CLUSTER_ID`、`OPENCLAW_CLI`、`OPENCLAW_SHELL`、`DWS_KEYCHAIN_DIR`、`DINGTALK_FEEDBACK_REPORT_ENDPOINT`，另有敏感项 `DINGTALK_CLIENT_SECRET`、`API_KEY` / `SKILL_KEY`、`DEEP_RESEARCH_SECRET`、`VIDEO_AGENT_SHARED_KEY`、`DWS_CLIENT_SECRET`。
-
-`.env` 会话维护参数：`PRUNE_AFTER=30d`、`ARCHIVE_RETENTION=7d`、`MAX_DISK_BYTES=3072mb`、`HIGH_WATER_BYTES=2048mb`、`SESSION_STRATEGY=none`、日志级别 info。
+环境变量（值不入档）：`AGENT_ID`、`MODEL_ID`、`IMAGE_MODEL_ID`、`OPENCLAW_GATEWAY_TOKEN`、`OPENCLAW_CLUSTER_ID`、`DWS_KEYCHAIN_DIR`；敏感项另有 `DINGTALK_CLIENT_SECRET`、`API_KEY` / `SKILL_KEY`、`DEEP_RESEARCH_SECRET`、`VIDEO_AGENT_SHARED_KEY`、`DWS_CLIENT_SECRET`。`.env` 会话维护：30 天清理、归档保留 7 天、磁盘上限 3 GB / 高水位 2 GB。
 
 workspace 规范（已写入其记忆 `workspace_rules`）：书籍/文档 → `书籍/`，脚本 → `scripts/`，临时文件用完即删，`memory/` `.learnings/` `.local/` `.tmp/` `templates/` 属系统目录不碰，根目录只允许放目录。
 
@@ -149,13 +135,7 @@ workspace 规范（已写入其记忆 `workspace_rules`）：书籍/文档 → `
 
 无法获取：`openclaw.json` 主配置、K8s ServiceAccount Token、平台管理操作、其他 agent 信息。
 
-## 九、能力与限制清单
-
-**可用（20 项）**：Python 执行（root，pip 可装）、文件读写（NFS 持久化）、记忆系统、多会话并行、完整 API 链、pip 安装、cap-webfetch 出网、Bing 搜索、dws 操作 COME3.0（待办/消息/群聊/通讯录/日历/文档/云盘/表格/知识库/DING）、发文件图片、定时任务、企业邮件只读、图片 OCR、AI 生成 PPT、BPM 流程、知识中台、MCP 连接、Skill 自建。
-
-**不可用**：基础外网通道、ctokenai API（端点不公开）、KHM/V盘（TCP 不通）、webchat 通道下的子 agent 派生与钉钉消息、系统级操作（ClawAegis）、`web_fetch` 访问内网。
-
-## 十、协作架构（3122 ↔ 大头虾）
+## 九、协作架构（3122 ↔ 大头虾）
 
 | 方向 | 通道 | 状态 |
 |---|---|---|
@@ -163,13 +143,13 @@ workspace 规范（已写入其记忆 `workspace_rules`）：书籍/文档 → `
 | 大头虾 → 3122 | dws / COME3.0，平台投递到当前窗口 | ✅ |
 | 双向文件 | relay v1.0 三通道 | ✅ |
 
-Relay 三通道：A 大文件（gzip → split 100KB → base64 → GitHub → FILE_NOTIFY → cap-webfetch 抓取）；B 小文件（≤4KB，聊天 Base64 单条）；C 异步中转（agentapi fileManagement）。
+Relay 三通道与 v2.0 变更见 `relay-channel-optimization.md`，此处不重复。
 
 互补关系：3122 是知识大脑（124 知识库、IT 技能、relay、bus 信箱、GitHub）；大头虾是内网手脚（COME3.0、邮箱、BPM、知识中台、MCP 数据库、SSO、定时任务）。
 
 COME3.0 机器人：Client ID `dingerpx1vdklcfmszba`，dingtalk-connector 接入，通讯录搜「大头虾」。
 
-## 十一、幻觉记录与验证方法
+## 十、幻觉记录与验证方法
 
 已确认的四类幻觉：
 
@@ -180,14 +160,10 @@ COME3.0 机器人：Client ID `dingerpx1vdklcfmszba`，dingtalk-connector 接入
 
 验证规则：文件操作后用 `find . -type f` 核对；网络操作看 exit code 不看文字描述；删除类操作多轮验证；**关键结论必须用 exec 跑实际命令，不能信文字总结**。
 
-## 十二、已知限制
+## 十一、已知限制
 
-1. 定时任务上限 5 个，最低 1 小时/次
-2. 仅持久化 `SOUL` / `TOOLS` / `USER.md` 与 `memory/`、`scripts/`、`.tmp/`、`.hidden`
-3. 不能在 `skills/` 手动建文件（平台托管）
-4. 不能对大表 `SELECT *` 不设限
-5. 不能编造数据
-6. 不能替用户决定合规边界
-7. 中文回复中「钉钉」须替换为「COME3.0」
-8. webchat 通道能力受限，钉钉通道更全
-9. `dws auth login` 授权码 15 分钟有效，token 存 `~/.local/share/dws-cli/`
+1. 定时任务上限 5 个、最低 1 小时/次。
+2. 只在 `SOUL` / `TOOLS` / `USER.md` 与 `memory/`、`scripts/`、`.tmp/`、`.hidden` 持久化。
+3. `skills/` 由平台托管，不能手动建文件。
+4. 中文回复中「钉钉」须替换为「COME3.0」；webchat 通道能力弱于钉钉通道。
+5. `dws auth login` 授权码 15 分钟有效，token 存 `~/.local/share/dws-cli/`。
