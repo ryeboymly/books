@@ -8,11 +8,8 @@
 |------|------|
 | 3122-system-architecture.md | 3122 系统完整运行机制 |
 | aigate.md | AI 网关逆向（三合一轮次合并版） |
-| cagent-architecture-report.md | 大头虾架构报告 |
-| cagent-capability-report.md | 大头虾能力边界探测 |
-| cagent-pod-config-report.md | 大头虾 Pod 配置逆向 |
-| cagentapi-reverse-report.md | cagentapi + agentapi 逆向 |
-| cagent-api-guide.md | cagent API 指南 |
+| cagent-architecture.md | 大头虾架构与能力（五合一轮次合并版） |
+| cagent-api.md | 大头虾 API 逆向（合并版） |
 | khm-upload-guide.md | KHM 上传指南 |
 | vdrive-api-guide.md | V 盘 API 指南 |
 | vision-ai-api-reverse-report.md | 视觉 AI 逆向报告 |
