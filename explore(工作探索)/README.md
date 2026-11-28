@@ -20,7 +20,6 @@
 | relay-channel-optimization.md | 通信通道优化 v2.0 |
 | books-reorg-comparison-v2.md | 仓库整理三模型对比报告 |
 | archive-2026-11-27.md | 11-27 工作存档 |
-| sandbox-security-selfcheck.html | 沙箱安全自查清单 |
 
 ## scripts/
 
