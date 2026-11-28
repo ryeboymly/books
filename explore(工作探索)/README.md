@@ -7,8 +7,7 @@
 | 文件 | 主题 |
 |------|------|
 | 3122-system-architecture.md | 3122 系统完整运行机制 |
-| aigate-capability-report.md | AI 网关能力报告（初版） |
-| aigate-5-models-deep-reverse.md | AI 网关 5 模型深度逆向 |
+| aigate.md | AI 网关逆向（三合一轮次合并版） |
 | cagent-architecture-report.md | 大头虾架构报告 |
 | cagent-capability-report.md | 大头虾能力边界探测 |
 | cagent-pod-config-report.md | 大头虾 Pod 配置逆向 |
