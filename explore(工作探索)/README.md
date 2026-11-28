@@ -1,19 +1,40 @@
 # explore(工作探索)
 
-工作场景里的接口探测与逆向脚本，跟藏书、排版这条主线无关，单独分区存放，不混进 `tools/`。
+工作场景里的接口探测与逆向脚本，跟藏书、排版这条主线无关，单独分区存放。
 
-| 文件 | 说明 |
-|---|---|
-| `khm_upload.py` | KHM 知识中心文件上传，逆向自 khm.catl.com 前端 |
-| `khm-upload-guide.md` | 上述脚本的接口说明与参数 |
-| `cagent_api.py` | C-Agent 对话接口客户端，逆向自 cagent.catl.com |
-| `cagent-api-guide.md` | 上述客户端的接口与方法说明 |
-| `cagent-capability-report.md` | C-Agent 能力边界实测记录 |
-| `vdrive_api.py` | V盘 2.0 接口客户端，逆向自 sdrivesmm.catl.com |
-| `vdrive-api-guide.md` | 上述客户端的接口说明（GET 方法、上传表单） |
+## docs/
 
-约定：
+| 文件 | 主题 |
+|------|------|
+| 3122-system-architecture.md | 3122 系统完整运行机制 |
+| aigate-capability-report.md | AI 网关能力报告（初版） |
+| aigate-5-models-deep-reverse.md | AI 网关 5 模型深度逆向 |
+| cagent-architecture-report.md | 大头虾架构报告 |
+| cagent-capability-report.md | 大头虾能力边界探测 |
+| cagent-pod-config-report.md | 大头虾 Pod 配置逆向 |
+| cagentapi-reverse-report.md | cagentapi + agentapi 逆向 |
+| cagent-api-guide.md | cagent API 指南 |
+| khm-upload-guide.md | KHM 上传指南 |
+| vdrive-api-guide.md | V 盘 API 指南 |
+| vision-ai-api-reverse-report.md | 视觉 AI 逆向报告 |
+| relay-channel-optimization.md | 通信通道优化 v2.0 |
+| books-reorg-comparison-v2.md | 仓库整理三模型对比报告 |
+| archive-2026-11-27.md | 11-27 工作存档 |
+| sandbox-security-selfcheck.html | 沙箱安全自查清单 |
+
+## scripts/
+
+| 脚本 | 用途 |
+|------|------|
+| cagent_api.py | cagent 对话 API 客户端 |
+| khm_upload.py | KHM 文件上传工具 |
+| relay_protocol.py | 文件中转协议 v1.0 |
+| relay_send.py | 文件中转发送工具 v3.2 |
+| vdrive_api.py | V 盘 API CLI 工具 |
+
+## 约定
 
 - 这里的产出是过程性探索材料，不保证稳定，接口随前端更新会失效。
 - 与 `collected/`、`originals/`、`tools/bookkit/` 无依赖关系，删改互不影响。
-- 新增同类探索放本目录，不要再往 `tools/` 里加。
+- 新增同类探索放本目录（docs/ 或 scripts/），不要再往 `tools/` 里加。
+- 新增文件时在上方表格加一行，不要写"共 N 个"。

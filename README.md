@@ -1,22 +1,36 @@
 # books
 
-个人藏书与自撰文章。
+个人藏书与自撰文章仓库，兼存放工作探索脚本与电子书排版工具。
 
-## originals/
-自写文章，原样保存。
+## 目录结构
 
-## collected/
-收录整理过的书，按 `collected/<格式>/<序号>_<书名>.<扩展名>` 存放。序号按入库顺序排，同一本书的三种格式序号一致。
+| 路径 | 内容 |
+|------|------|
+| `originals/` | 自撰文章 |
+| `collected/` | 藏书成品，一书三格式同名：`<NN_书名>.md/.html/.epub` |
+| `explore(工作探索)/docs/` | 工作报告与技术文档 |
+| `explore(工作探索)/scripts/` | 探索脚本（cagent / khm / relay / vdrive） |
+| `tools/bookkit/` | 排版工具：md → html/epub |
 
-| 序号 | 书名 | Markdown | EPUB | HTML |
-|---|---|---|---|---|
-| 01 | 毒教育 | `01_毒教育.md` | `01_毒教育.epub` | `01_毒教育.html` |
-| 02 | 社会操控术 | `02_社会操控术.md` | `02_社会操控术.epub` | `02_社会操控术.html` |
+## 藏书
+
+| 书 | 文件 |
+|----|------|
+| 01 毒教育 | `collected/01_毒教育/01_毒教育.{md,html,epub}` |
+| 02 社会操控术 | `collected/02_社会操控术/02_社会操控术.{md,html,epub}` |
 
 原书为 OCR 文本，经 `tools/bookkit` 重排：断句分段、清噪校错、白底 EPUB 与双端 HTML。文字内容以 Markdown 版为准。
 
-## tools/bookkit/
-规格驱动的排版流水线，用法见 `tools/bookkit/README.md`。
+## bookkit
 
-## explore(工作探索)/
-工作场景的接口探测与逆向脚本（KHM、C-Agent、V盘 2.0），与藏书主线无关，单独分区存放。清单见 `explore(工作探索)/README.md`。
+```bash
+python tools/bookkit/bookkit.py <spec.yml>
+```
+
+用法见 `tools/bookkit/README.md`。
+
+## 约定
+
+1. 报告进 `explore(工作探索)/docs/`，脚本进 `explore(工作探索)/scripts/`，根目录只留 README/.gitignore
+2. 中间产物（`chunks_b64/`、`*.b64`）与测试大文件不入库
+3. 新增文档/脚本时在 `explore(工作探索)/README.md` 索引表加一行——只增行，不写"共 N 个"

@@ -1,2 +1,30 @@
+# ---- 中间产物 / 传输分块 ----
+chunks_b64/
+*.b64
+*.part
+*.chunk
+
+# ---- 测试大文件 ----
+/relay/
+large_test.*
+
+# ---- Python ----
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+venv/
+
+# ---- 编辑器 / 系统 ----
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# ---- 临时 / 备份 ----
+*.tmp
+*.bak
+*~
+
+# ---- (可选) HTML 若可由 bookkit 一键重建,取消注释 ----
+# collected/*.html
