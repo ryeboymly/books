@@ -8,7 +8,7 @@
 
 ## 一、cagentapi.catl.com 可用API
 
-Token: `a4bd924d..._3`（3122→大头虾方向）
+Token: `<cagentapi_token…>`（3122→大头虾方向）
 
 ### ✅ 可用端点（10个）
 
@@ -113,7 +113,7 @@ Body: {model, messages, sessionId, stream}
 
 ## 二、agentapi.catl.com 可用API
 
-Token: `e88063d6..._3`（大头虾→3122方向）
+Token: `<fm_token…>`（大头虾→3122方向）
 
 ### ✅ 可用端点（3个）
 
@@ -142,7 +142,7 @@ Token: `e88063d6..._3`（大头虾→3122方向）
 {
   "id": 14008331,
   "code": "agent-1794400677722-fe418fb5",
-  "name": "C-Claw-60401094",
+  "name": "C-Claw-<工号>",
   "alias": "缪林耀·智能合约虾",
   "creatorName": "缪林耀",
   "enableStatus": "ENABLED",
@@ -157,7 +157,7 @@ Token: `e88063d6..._3`（大头虾→3122方向）
     "mountPath": "/home/node/.openclaw"
   },
   "agentScope": "PERSONAL",
-  "assignedUserId": "60401094",
+  "assignedUserId": "<工号>",
   "sandboxEnabled": false,
   "agentType": "GENERAL",
   "description": "CATL智能协作助手",
@@ -217,7 +217,7 @@ Token: `e88063d6..._3`（大头虾→3122方向）
 | 任务 | Cron | PowerJob ID | 说明 |
 |------|------|-------------|------|
 | relay-file-check | 每小时整点 | 14018011 | 检查relay_文件，下载后删除，通知3122 |
-| 私信自动查阅回复 | 每小时整点 | 14016242 | 查阅60401094私信，能回则回 |
+| 私信自动查阅回复 | 每小时整点 | <工号2> | 查阅<工号>私信，能回则回 |
 | AI日报 | 每天8:00 | - | AI科技+国际+国内新闻日报→虾间学习群5 |
 | 冷压故障转发 | 每天20/22/0/2/4/6点 | - | 冷压故障群提取"缪林耀"消息→71线群 |
 
@@ -241,7 +241,7 @@ Token: `e88063d6..._3`（大头虾→3122方向）
 
 ### cron session（定时任务源）
 ```
-[user] [scheduled-task:14016242] 私信自动查阅回复任务...
+[user] [scheduled-task:<工号2>] 私信自动查阅回复任务...
 [assistant] 获取当前时间，查消息...
 [user] [scheduled-task:14018011] relay-file-check...
 [assistant] 没有relay_开头的文件，静默跳过。NO_REPLY
@@ -257,8 +257,8 @@ Token: `e88063d6..._3`（大头虾→3122方向）
 
 | Token | 域 | 可用API | 不可用API |
 |-------|-----|---------|-----------|
-| a4bd924d..._3 | cagentapi | agent详情、session CRUD、消息历史、发消息 | agent列表、模型列表、agent配置 |
-| e88063d6..._3 | agentapi | fileManagement上传/列表/删除 | chat、agents、models |
+| <cagentapi_token…> | cagentapi | agent详情、session CRUD、消息历史、发消息 | agent列表、模型列表、agent配置 |
+| <fm_token…> | agentapi | fileManagement上传/列表/删除 | chat、agents、models |
 
 ### 权限模型
 - cagentapi token绑定到agentId=14008331，只能操作该agent的session和消息

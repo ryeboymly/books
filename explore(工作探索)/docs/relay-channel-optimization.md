@@ -29,7 +29,7 @@ v1.0方案（relay_protocol.py）设计了三条通道：
   └─ 大文件(>4KB): gzip→split→GitHub push→聊天发FILE_NOTIFY
 
 大头虾 → 3122：dws chat send-by-bot → 本杰明COME → 本杰明与3122对话
-  └─ 大头虾有事情时发COME消息给本杰明(60401094)
+  └─ 大头虾有事情时发COME消息给本杰明(<工号>)
      本杰明看到后与3122对话，3122处理后再通过cagentapi回复大头虾
 ```
 
@@ -37,7 +37,7 @@ v1.0方案（relay_protocol.py）设计了三条通道：
 
 | 能力 | 方向 | 状态 | 说明 |
 |------|------|------|------|
-| cagentapi chat/stream | 3122→大头虾 | ✅ 可用 | relay session(14104349)，token=64ba58f8 |
+| cagentapi chat/stream | 3122→大头虾 | ✅ 可用 | relay session(14104349)，token=<cagentapi_token前缀> |
 | 聊天Base64编解码 | 3122→大头虾 | ✅ 可用 | SHA256校验，心跳测试通过 |
 | GitHub中转 | 3122→大头虾 | ✅ 可用 | cap-webfetch抓取，大文件分块 |
 | dws chat send-by-bot | 大头虾→3122 | ✅ 可用 | 发COME消息给本杰明，已验证 |
@@ -54,8 +54,8 @@ v1.0方案（relay_protocol.py）设计了三条通道：
 
 | Token | 值(前8位) | 域 | 用途 | 状态 |
 |-------|-----------|-----|------|------|
-| cagentapi | 64ba58f8 | cagentapi.catl.com | 3122→大头虾聊天 | ✅ 可用 |
-| fm_token | d38111d7 | agentapi.catl.com | fileManagement(退役) | ⚠️ 保留备用 |
+| cagentapi | <cagentapi_token前缀> | cagentapi.catl.com | 3122→大头虾聊天 | ✅ 可用 |
+| fm_token | <fm_token> | agentapi.catl.com | fileManagement(退役) | ⚠️ 保留备用 |
 | github_pat | github_pat | github.com | GitHub中转大文件 | ✅ 可用 |
 
 ## 四、变更记录

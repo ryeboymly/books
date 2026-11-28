@@ -2,7 +2,7 @@
 
 > 探测时间: 2026-11-28
 > 探测方: 3122 (IT服务数字人)
-> API Key: sk-yQ9...(已存入 mly-secrets)
+> API Key: <略>(已存入 mly-secrets)
 
 ## 一、端点清单
 

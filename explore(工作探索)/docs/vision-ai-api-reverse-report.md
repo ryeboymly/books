@@ -50,8 +50,8 @@ vision-ai前端读取cookie → Authorization: Bearer {token}
 ### 实测可用Token
 
 ```
-access_token: e88063d6-0a1b-4ae2-9b81-e89ce226029d_3
-工号: 60401094
+access_token: <access_token>
+工号: <工号>
 ```
 
 ## 四、核心API清单
@@ -92,7 +92,7 @@ access_token: e88063d6-0a1b-4ae2-9b81-e89ce226029d_3
 POST https://vision-aiapi.catl.com/vision-ai-platform/cluster-proxy/api/v1/session
 Headers:
   Content-Type: application/json
-  Authorization: Bearer e88063d6-0a1b-4ae2-9b81-e89ce226029d_3
+  Authorization: Bearer <access_token>
 Body:
   {"title": "会话标题"}
 
@@ -109,7 +109,7 @@ Response:
 POST https://vision-aiapi.catl.com/vision-ai-platform/cluster-proxy/api/v1/session/its_4c9486e805734b0cad6b/message
 Headers:
   Content-Type: application/json
-  Authorization: bearer e88063d6-0a1b-4ae2-9b81-e89ce226029d_3
+  Authorization: bearer <access_token>
   Accept-Language: zh-CN
 Body:
   {
@@ -167,7 +167,7 @@ Response Headers:
 ```
 GET https://vision-aiapi.catl.com/vision-ai-lili/v1/lili/1/sse/connect/{sseUuid}?sessionId={sessionId}
 Headers:
-  Authorization: bearer e88063d6-0a1b-4ae2-9b81-e89ce226029d_3
+  Authorization: bearer <access_token>
   Accept: text/event-stream
   Cache-Control: no-cache
 
@@ -183,12 +183,12 @@ Response:
 POST https://vision-aiapi.catl.com/vision-ai-lili/v1/lili/1/sse/send
 Headers:
   Content-Type: application/json
-  Authorization: bearer e88063d6-0a1b-4ae2-9b81-e89ce226029d_3
+  Authorization: bearer <access_token>
 Body:
   {
     "model": "C-GPT_V1.0",
     "type": 1,
-    "empNo": "60401094",
+    "empNo": "<工号>",
     "code": "PCLiLi",
     "platformCode": "PCLiLi",
     "robotCode": "genai_lili",
@@ -202,7 +202,7 @@ Body:
   }
 
 Response:
-  {"sessionId":"genai_lili-60401094","sender":0,"msgType":"TEXT","employeeCode":"60401094","platform":"PCLiLi","robotCode":"genai_lili","empNo":"60401094","model":"C-GPT_V1.0","knowledges":["PMOBOT","fnc","it","hr","ops","amd","cmd","qa","vbt","dps","opn","pms","trp","slit","ios","bm","ew","scts","ehs","deda","mu2","pmc","mu1","src","sso","invest","mes","iad",...]}
+  {"sessionId":"genai_lili-<工号>","sender":0,"msgType":"TEXT","employeeCode":"<工号>","platform":"PCLiLi","robotCode":"genai_lili","empNo":"<工号>","model":"C-GPT_V1.0","knowledges":["PMOBOT","fnc","it","hr","ops","amd","cmd","qa","vbt","dps","opn","pms","trp","slit","ios","bm","ew","scts","ehs","deda","mu2","pmc","mu1","src","sso","invest","mes","iad",...]}
 ```
 
 ### Send返回的知识库列表（完整）
@@ -283,7 +283,7 @@ mcpServers:
 ### 认证
 
 ```
-Token: a4bd924d-6bf8-46ce-a888-1bdde99d13bc_3
+Token: <cagentapi_token>
 agentId: 14008331
 API Host: https://cagentapi.catl.com
 ```
@@ -293,7 +293,7 @@ API Host: https://cagentapi.catl.com
 ```
 POST https://cagentapi.catl.com/c-agent/v1/chat/sessions
 Headers:
-  Authorization: Bearer a4bd924d-6bf8-46ce-a888-1bdde99d13bc_3
+  Authorization: Bearer <cagentapi_token>
   Content-Type: application/json
 Body:
   {"agentId": "14008331", "content": "init"}
@@ -304,7 +304,7 @@ Body:
 ```
 POST https://cagentapi.catl.com/c-agent/v1/chat/stream
 Headers:
-  Authorization: Bearer a4bd924d-6bf8-46ce-a888-1bdde99d13bc_3
+  Authorization: Bearer <cagentapi_token>
   Content-Type: application/json
   Accept: text/event-stream
   Cache-Control: no-cache
@@ -322,7 +322,7 @@ Response: SSE流式
 ```python
 import http.client, json, ssl
 
-TOKEN = "e88063d6-0a1b-4ae2-9b81-e89ce226029d_3"
+TOKEN = "<access_token>"
 API_HOST = "vision-aiapi.catl.com"
 ctx = ssl.create_default_context()
 
@@ -379,7 +379,7 @@ conn2.close()
 ```python
 import http.client, json, ssl, time
 
-CAGENT_TOKEN = "a4bd924d-6bf8-46ce-a888-1bdde99d13bc_3"
+CAGENT_TOKEN = "<cagentapi_token>"
 CAGENT_HOST = "cagentapi.catl.com"
 AGENT_ID = "14008331"
 ctx = ssl.create_default_context()
@@ -509,7 +509,7 @@ GET /vision-ai-platform/cluster-proxy/api/v1/history
 
 ```
 GET /vision-ai-platform/v1/skillCenter/skills?agentId=87558735-a999-4645-b86a-ad9086723dfa
-Authorization: Bearer e88063d6-0a1b-4ae2-9b81-e89ce226029d_3
+Authorization: Bearer <access_token>
 ```
 
 | # | 技能名 | 中文名 | 类型 | 产品 |
@@ -529,7 +529,7 @@ Authorization: Bearer e88063d6-0a1b-4ae2-9b81-e89ce226029d_3
 
 ```
 GET /vision-ai-platform/v1/expertCenter/experts
-Authorization: Bearer e88063d6-0a1b-4ae2-9b81-e89ce226029d_3
+Authorization: Bearer <access_token>
 ```
 
 | # | 专家 | 领域 | 调用次数 | agentId |
